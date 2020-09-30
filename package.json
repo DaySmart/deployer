@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/DaySmart/deployer#readme",
   "dependencies": {
+    "got": "^11.7.0",
     "js-yaml": "^3.14.0",
     "json-refs": "^3.0.15",
     "minimist": "^1.2.5"
