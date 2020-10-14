@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/DaySmart/deployer#readme",
   "dependencies": {
+    "aws-sdk": "^2.770.0",
     "got": "^11.7.0",
     "js-yaml": "^3.14.0",
     "json-refs": "^3.0.15",
