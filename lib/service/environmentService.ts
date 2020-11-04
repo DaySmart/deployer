@@ -1,8 +1,9 @@
-"use strict";
 const got = require('got');
-const apiUrl = "https://environments.daysmart.net/output";
+
+const apiUrl = "https://environments.daysmart.net/output"
+
 module.exports = {
-    async putComponentOutput(environment, component, key, value) {
+    async putComponentOutput(environment: string, component: string, key: string, value: string) {
         await got.post(apiUrl, {
             json: {
                 componentName: `${environment}.${component}`,
@@ -11,4 +12,5 @@ module.exports = {
             }
         });
     }
-};
+}
+

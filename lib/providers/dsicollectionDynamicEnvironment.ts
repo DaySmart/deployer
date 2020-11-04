@@ -1,10 +1,20 @@
-'use strict';
+'use strict'
 const AWS = require('aws-sdk');
-const lambda = new AWS.Lambda({ region: 'us-east-1' });
-const logs = new AWS.CloudWatchLogs({ region: 'us-east-1' });
-const codebuild = new AWS.CodeBuild({ region: 'us-east-1' });
+
+const lambda = new AWS.Lambda({region: 'us-east-1'});
+const logs = new AWS.CloudWatchLogs({region: 'us-east-1'});
+const codebuild = new AWS.CodeBuild({region: 'us-east-1'});
+
+
 class DsicollectionDynamicEnvironment {
-    constructor(config) {
+	public stage: any;
+	public region: any;
+	public branch: any;
+	public baseEnvironment: any;
+	public includeApps: any;
+	public excludeApps: any;
+
+    constructor(config: any) {
         this.stage = config.env;
         this.region = config.input.region;
         this.branch = config.input.branch;
@@ -12,6 +22,7 @@ class DsicollectionDynamicEnvironment {
         this.includeApps = config.input.includeApps;
         this.excludeApps = config.input.excludeApps;
     }
+
     async deploy() {
         const triggerResp = await lambda.invoke({
             FunctionName: 'arn:aws:lambda:us-east-1:022393549274:function:dynamic-environment-service-dev-provisionDynamicEnvironment',
@@ -23,30 +34,34 @@ class DsicollectionDynamicEnvironment {
                 excludeApps: this.excludeApps
             })
         }).promise();
+
         const buildPayload = JSON.parse(triggerResp.Payload);
-        if (buildPayload.message) {
+        if(buildPayload.message) {
             console.log(buildPayload.message);
-        }
-        else {
+        } else {
             console.error(buildPayload);
         }
-        if (buildPayload.buildId) {
+        
+        if(buildPayload.buildId) {
             await this.cloudwatchSubscribe(buildPayload.buildId, undefined);
         }
+
         return {
             outputs: []
-        };
+        }
     }
-    async cloudwatchSubscribe(buildId, lastTime) {
+
+    async cloudwatchSubscribe(buildId: string, lastTime: any) {
         let build;
         do {
-            const buildInfo = await codebuild.batchGetBuilds({ ids: [buildId] }).promise();
+            const buildInfo = await codebuild.batchGetBuilds({ids: [buildId]}).promise();
             build = buildInfo.builds[0];
-        } while (!(build.logs.groupName && build.logs.streamName));
-        let forwardToken = '';
+        } while(!(build.logs.groupName && build.logs.streamName));
+
+        let forwardToken: string | undefined = '';
         let nextTime = new Date().valueOf();
         do {
-            let logEvents = await logs.getLogEvents({
+            let logEvents: any = await logs.getLogEvents({
                 logGroupName: build.logs.groupName,
                 logStreamName: build.logs.streamName,
                 startTime: lastTime,
@@ -54,15 +69,19 @@ class DsicollectionDynamicEnvironment {
                 nextToken: forwardToken === '' ? undefined : forwardToken,
                 startFromHead: true
             }).promise();
-            for (var event of logEvents.events) {
+            
+            for(var event of logEvents.events) {
                 console.log((new Date(event.timestamp)).toISOString(), event.message);
             }
+            
             forwardToken = (logEvents.nextForwardToken === forwardToken) ? undefined : forwardToken;
-        } while (forwardToken);
-        if (['IN_PROGRESS'].includes(build.buildStatus)) {
+        } while(forwardToken);
+        
+        if(['IN_PROGRESS'].includes(build.buildStatus)) {
             await new Promise(resolve => setTimeout(resolve, 60000));
             await this.cloudwatchSubscribe(buildId, nextTime);
         }
     }
 }
+
 module.exports = DsicollectionDynamicEnvironment;
