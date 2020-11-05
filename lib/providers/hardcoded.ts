@@ -1,9 +1,14 @@
-'use strict';
+'use strict'
+
 class HardCoded {
-    constructor(config) {
+	public stage: any;
+	public input: any;
+
+    constructor(config: any) {
         this.stage = config.env;
         this.input = config.input;
     }
+
     async deploy() {
         return {
             outputs: Object.entries(this.input).map(([key, value]) => {
@@ -11,9 +16,10 @@ class HardCoded {
                 return {
                     key: key,
                     value: value
-                };
+                }
             })
-        };
+        }
     }
 }
+
 module.exports = HardCoded;
