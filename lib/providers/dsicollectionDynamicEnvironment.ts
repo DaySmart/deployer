@@ -1,5 +1,5 @@
 'use strict'
-const AWS = require('aws-sdk');
+import AWS = require('aws-sdk');
 
 const lambda = new AWS.Lambda({region: 'us-east-1'});
 const logs = new AWS.CloudWatchLogs({region: 'us-east-1'});
@@ -35,7 +35,7 @@ class DsicollectionDynamicEnvironment {
             })
         }).promise();
 
-        const buildPayload = JSON.parse(triggerResp.Payload);
+        const buildPayload = JSON.parse(triggerResp.Payload as string);
         if(buildPayload.message) {
             console.log(buildPayload.message);
         } else {
@@ -55,8 +55,8 @@ class DsicollectionDynamicEnvironment {
         let build;
         do {
             const buildInfo = await codebuild.batchGetBuilds({ids: [buildId]}).promise();
-            build = buildInfo.builds[0];
-        } while(!(build.logs.groupName && build.logs.streamName));
+            build = buildInfo.builds ? buildInfo.builds[0] : {logs: undefined};
+        } while(!(build.logs?.groupName && build.logs?.streamName));
 
         let forwardToken: string | undefined = '';
         let nextTime = new Date().valueOf();
@@ -77,7 +77,7 @@ class DsicollectionDynamicEnvironment {
             forwardToken = (logEvents.nextForwardToken === forwardToken) ? undefined : forwardToken;
         } while(forwardToken);
         
-        if(['IN_PROGRESS'].includes(build.buildStatus)) {
+        if(build.buildStatus ? ['IN_PROGRESS'].includes(build.buildStatus) : false) {
             await new Promise(resolve => setTimeout(resolve, 60000));
             await this.cloudwatchSubscribe(buildId, nextTime);
         }

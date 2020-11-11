@@ -28,7 +28,7 @@ export class ServerlessV1 {
         }
 
         this.writeConfigFile();
-
+        console.log('provider args', process.argv)
         const sls = new serverless({});
         await sls.init();
         await sls.run(); 
