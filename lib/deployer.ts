@@ -4,6 +4,7 @@ import { ServerlessV1 } from './providers/serverless';
 const HardCoded = require('./providers/hardcoded');
 const DsicollectionDynamicEnvironment = require('./providers/dsicollectionDynamicEnvironment');
 const environmentService = require('./service/environmentService');
+const snsClient = require('./service/snsClient');
 
 class Deployer {
 	public file: any;
@@ -62,6 +63,17 @@ class Deployer {
         }
 
         const deployResp = await provider.deploy();
+
+        if(this.jobRunGuid && this.deploymentGuid) {
+            await snsClient.publishJobRunFinishedMessage({
+                deploymentGuid: this.deploymentGuid,
+                env: this.component.env,
+                jobRunGuid: this.jobRunGuid,
+                name: this.component.name,
+                status: "Success",
+                outputs: JSON.stringify(deployResp.outputs)
+            })
+        }
 
         // Store the component in the environment service with it's outputs
         // if(deployResp.outputs) {
