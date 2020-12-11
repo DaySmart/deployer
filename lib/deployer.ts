@@ -8,12 +8,21 @@ const environmentService = require('./service/environmentService');
 class Deployer {
 	public file: any;
 	public command: any;
-	public component: any;
+    public component: any;
+    public jobRunGuid?: string;
+    public deploymentGuid?: string;
 
-    constructor(command: any, file: string) {
+    constructor(command: any, file: string | undefined) {
         this.file = file;
         this.command = command;
-        this.component = this.parseComponentTemplate(this.file);
+        if(this.file) {
+            this.component = this.parseComponentTemplate(this.file);
+        } else {
+            this.component = this.parseEnvironmentVariables();
+            this.deploymentGuid = process.env.DEPLOYMENT_GUID;
+            this.jobRunGuid = process.env.JOB_RUN_GUID;
+        }
+        
         console.log(this.component);
     }
 
@@ -55,15 +64,31 @@ class Deployer {
         const deployResp = await provider.deploy();
 
         // Store the component in the environment service with it's outputs
-        if(deployResp.outputs) {
-            await deployResp.outputs.forEach((output: any) => {
-                environmentService.putComponentOutput(this.component.env, this.component.name, output.key, output.value)
-            });
-        }
+        // if(deployResp.outputs) {
+        //     await deployResp.outputs.forEach((output: any) => {
+        //         environmentService.putComponentOutput(this.component.env, this.component.name, output.key, output.value)
+        //     });
+        // }
     }
 
     async destroy() {
 
+    }
+
+    parseEnvironmentVariables(): any {
+        let provider
+        try {
+            provider = JSON.parse(process.env.COMPONENT_PROVIDER as string)
+        } catch(err) {
+            provider = process.env.COMPONENT_PROVIDER
+        }
+
+        return {
+            env: process.env.COMPONENT_ENVIRONMENT,
+            name: process.env.COMPONENT_NAME,
+            provider: provider,
+            inputs: (process.env.COMPONENT_INPUTS) ? JSON.parse(process.env.COMPONENT_INPUTS) : undefined
+        }
     }
 
     parseComponentTemplate(file: string) {

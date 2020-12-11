@@ -31,11 +31,11 @@ export class ServerlessV1 {
         console.log('provider args', process.argv)
         const sls = new serverless({});
         await sls.init();
-        await sls.run(); 
-        const outputs = await this.getStackOutput(sls);
+        // await sls.run(); 
+        // const outputs = await this.getStackOutput(sls);
 
         return {
-            outputs: outputs
+            outputs: []//outputs
         }
     }
 
