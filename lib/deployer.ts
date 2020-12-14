@@ -42,8 +42,10 @@ class Deployer {
         let providerType;
         if(this.component.provider instanceof String) {
            providerType = this.component.provider; 
-        } else {
+        } else if(this.component.provider.name) {
             providerType = this.component.provider.name;
+        } else if(this.component.provider.Name) {
+            providerType = this.component.provider.Name
         }
         switch(providerType) {
             case 'serverless-framework':

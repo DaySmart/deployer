@@ -10,9 +10,9 @@ export class ServerlessV1 {
 	public region: any;
 
     constructor(config: any) {
-        this.stage = config.env;
-        this.input = config.input;
-        this.region = config.region;
+        this.stage = config.env || config.Env;
+        this.input = config.input || config.Inputs;
+        this.region = config.region || 'us-east-1';
     }
 
     async deploy() {
@@ -31,8 +31,8 @@ export class ServerlessV1 {
         console.log('provider args', process.argv)
         const sls = new serverless({});
         await sls.init();
-        // await sls.run(); 
-        // const outputs = await this.getStackOutput(sls);
+        await sls.run(); 
+        const outputs = await this.getStackOutput(sls);
 
         return {
             outputs: []//outputs
