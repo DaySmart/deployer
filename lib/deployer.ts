@@ -72,7 +72,7 @@ class Deployer {
                 env: this.component.env,
                 jobRunGuid: this.jobRunGuid,
                 name: this.component.name,
-                status: "Success",
+                status: deployResp.result ? 'Success' : 'Failed',
                 outputs: JSON.stringify(deployResp.outputs)
             })
         }
@@ -101,7 +101,14 @@ class Deployer {
             env: process.env.COMPONENT_ENVIRONMENT,
             name: process.env.COMPONENT_NAME,
             provider: provider,
-            inputs: (process.env.COMPONENT_INPUTS) ? JSON.parse(process.env.COMPONENT_INPUTS) : undefined
+            inputs: (process.env.COMPONENT_INPUTS) 
+                ? JSON.parse(process.env.COMPONENT_INPUTS).reduce((obj: any, item: any) => {
+                    return {
+                        ...obj,
+                        [item.Key]: item.Value
+                    }
+                }, {}) 
+                : undefined
         }
     }
 
