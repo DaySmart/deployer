@@ -97,13 +97,9 @@ class Deployer {
             provider = {
                 name: rawProvider.Name,
                 config: (rawProvider.Config) ? rawProvider.Config.reduce((obj: any, item: any) => {
-                    let value = item.Value;
-                    try {
-                        value = JSON.parse(value);
-                    } catch(e) {}
                     return {
                         ...obj,
-                        [item.Key]: value
+                        [item.Key]: item.Value
                     }
                 }, {}) : undefined
             }

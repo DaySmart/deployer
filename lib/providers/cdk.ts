@@ -5,7 +5,8 @@ import { CloudFormationDeployments } from 'aws-cdk/lib/api/cloudformation-deploy
 import { DeployStackResult } from 'aws-cdk/lib/api/deploy-stack';
 
 export interface CDKProviderProps {
-    env: cdk.Environment;
+    account: string;
+    region: string;
     constructPath: string;
     constructName: string;
 }
@@ -42,7 +43,10 @@ export class CDK {
 
         const app = new cdk.App();
         new CdkStack(app, `${env}-${componentName}`, {
-            env: config.env
+            env: {
+                account: config.account,
+                region: config.region
+            }
         });
         const assembly = app.synth();
 
