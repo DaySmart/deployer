@@ -93,6 +93,7 @@ class Deployer {
         let provider
         try {
             const rawProvider = JSON.parse(process.env.COMPONENT_PROVIDER as string)
+            console.log(rawProvider);
             provider = {
                 name: rawProvider.Name,
                 config: rawProvider.Config

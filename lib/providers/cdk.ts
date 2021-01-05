@@ -21,6 +21,8 @@ export class CDK {
         this.env = env;
         this.config = config;
         this.props = props;
+        console.log(this.config);
+        console.log(this.props);
     }
 
     async deploy() {
