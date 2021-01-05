@@ -96,7 +96,12 @@ class Deployer {
             console.log(rawProvider);
             provider = {
                 name: rawProvider.Name,
-                config: rawProvider.Config
+                config: (rawProvider.Config) ? rawProvider.Config.reduce((obj: any, item: any) => {
+                    return {
+                        ...obj,
+                        [item.Key]: item.Value
+                    }
+                }, {}) : undefined
             }
         } catch(err) {
             provider = process.env.COMPONENT_PROVIDER
