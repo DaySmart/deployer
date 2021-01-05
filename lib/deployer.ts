@@ -92,7 +92,11 @@ class Deployer {
     parseEnvironmentVariables(): any {
         let provider
         try {
-            provider = JSON.parse(process.env.COMPONENT_PROVIDER as string)
+            const rawProvider = JSON.parse(process.env.COMPONENT_PROVIDER as string)
+            provider = {
+                name: rawProvider.Name,
+                config: rawProvider.Config
+            }
         } catch(err) {
             provider = process.env.COMPONENT_PROVIDER
         }
