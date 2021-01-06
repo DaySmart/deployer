@@ -30,6 +30,7 @@ export class CDK {
         const componentName = this.name;
         const env = this.env;
         const componentProps = this.props;
+        console.log(componentProps);
         const config = this.config;
         class CdkStack extends cdk.Stack {
             constructor(scope: cdk.Construct, id: string, props: any) {
@@ -38,15 +39,13 @@ export class CDK {
                 new construct[constructName](this, constructName, componentProps);
             }
         }
-        console.log('aws info', this.config.account, this.config.region)
         const app = new cdk.App();
-        const cdkStack = new CdkStack(app, `${env}-${componentName}`, {
+        new CdkStack(app, `${env}-${componentName}`, {
             env: {
-                account: this.config.account || '022393549274',
-                region: this.config.region || 'us-east-1'
+                account: this.config.account,
+                region: this.config.region
             }
         });
-        console.log('cdk stack info', cdkStack.account, cdkStack.region)
         const assembly = app.synth();
 
         const sdkProvider = await SdkProvider.withAwsCliCompatibleDefaults({});

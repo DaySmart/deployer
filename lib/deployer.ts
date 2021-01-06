@@ -58,7 +58,7 @@ class Deployer {
                 provider = new DsicollectionDynamicEnvironment(this.component);
                 break;
             case 'cdk':
-                provider = new CDK(this.component.name, this.component.env, this.component.provider.config, this.component.input);
+                provider = new CDK(this.component.name, this.component.env, this.component.provider.config, this.component.inputs);
                 break;
             default:
                 throw(`The provider ${providerType} is not implemented!`);
