@@ -42,7 +42,7 @@ export class ServerlessV1 {
 
         return {
             result: success,
-            outputs: []//outputs
+            outputs: outputs
         }
     }
 
@@ -66,6 +66,6 @@ export class ServerlessV1 {
             .then((result: any) => {
                 return result.Stacks[0].Outputs
             });
-        return stackOutputs.map((output: any) => {return {key: output.OutputKey, value: output.OutputValue}});
+        return stackOutputs.map((output: any) => {return {Key: output.OutputKey, Value: output.OutputValue}});
     }
 }
