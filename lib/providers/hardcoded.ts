@@ -6,7 +6,7 @@ class HardCoded {
 
     constructor(config: any) {
         this.stage = config.env;
-        this.input = config.input;
+        this.input = config.inputs;
     }
 
     async deploy() {
