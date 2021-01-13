@@ -7,7 +7,8 @@ import { DeployStackResult } from 'aws-cdk/lib/api/deploy-stack';
 export interface CDKProviderProps {
     account: string;
     region: string;
-    constructPath: string;
+    constructPath?: string;
+    constructPackage?: string;
     constructName: string;
 }
 
@@ -25,7 +26,15 @@ export class CDK {
     }
 
     async deploy() {
-        const construct = await import(process.cwd() + '/' + this.config.constructPath);
+        let construct: any;
+        if(this.config.constructPath) {
+            construct = await import(process.cwd() + '/' + this.config.constructPath);
+        } else if(this.config.constructPackage) {
+            construct = require(this.config.constructPackage);
+        } else {
+            throw "Need to define constructPath or constructPackage!";
+        }
+        
         const constructName = this.config.constructName ? this.config.constructName : Object.keys(construct)[0];
         const componentName = this.name;
         const env = this.env;
