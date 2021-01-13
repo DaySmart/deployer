@@ -30,7 +30,9 @@ export class CDK {
         if(this.config.constructPath) {
             construct = await import(process.cwd() + '/' + this.config.constructPath);
         } else if(this.config.constructPackage) {
-            construct = require(this.config.constructPackage);
+            const { createRequireFromPath } = require('module')
+            const requireUtil = createRequireFromPath(process.cwd())
+            construct = requireUtil(this.config.constructPackage);
         } else {
             throw "Need to define constructPath or constructPackage!";
         }
