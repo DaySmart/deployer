@@ -51,12 +51,13 @@ export class CDK {
             }
         }
         const app = new cdk.App();
-        new CdkStack(app, `${env}-${componentName}`, {
+        const s = new CdkStack(app, `${env}-${componentName}`, {
             env: {
                 account: this.config.account,
                 region: this.config.region
             }
         });
+        console.log(s.environment);
         const assembly = app.synth();
 
         const sdkProvider = await SdkProvider.withAwsCliCompatibleDefaults({});
