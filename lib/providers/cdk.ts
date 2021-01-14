@@ -79,6 +79,7 @@ export class CDK {
         }
     
         return {
+            result: true,
             outputs: Object.entries(result.outputs)?.map(output => {return {Key: output[0], Value: output[1]}})
         }
     }
