@@ -68,7 +68,8 @@ export class CDK {
         try {
              result = await cloudformation.deployStack({
                 stack,
-                deployName: stack.stackName
+                deployName: stack.stackName,
+                force: true
             });
         } catch(err) {
             throw err;
