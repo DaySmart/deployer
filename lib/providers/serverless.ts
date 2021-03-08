@@ -11,7 +11,7 @@ export class ServerlessV1 {
 
     constructor(config: any) {
         this.stage = config.env || config.Env;
-        this.input = config.input || config.Inputs;
+        this.input = config.inputs || config.Inputs;
         this.region = config.region || 'us-east-1';
     }
 
