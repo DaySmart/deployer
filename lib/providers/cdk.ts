@@ -58,7 +58,11 @@ export class CDK {
                 new construct[constructName](this, constructName, componentProps);
             }
         }
-        const app = new cdk.App();
+
+        const configuration = new Configuration();
+        await configuration.load();
+
+        const app = new cdk.App({context: configuration.context});
         const s = new CdkStack(app, `${env}-${componentName}`, {
             env: {
                 account: this.config.account,
@@ -67,18 +71,15 @@ export class CDK {
         });
         console.log(s.environment);
 
-        const configuration = new Configuration();
-        await configuration.load();
-
         increaseVerbosity();
 
         const sdkProvider = await SdkProvider.withAwsCliCompatibleDefaults({});
 
-        // const cloudExecutable = new CloudExecutable({
-        //     configuration,
-        //     sdkProvider,
-        //     synthesizer: execProgram
-        // });
+        const cloudExecutable = new CloudExecutable({
+            configuration,
+            sdkProvider,
+            synthesizer: execProgram
+        });
 
         const cloudformation = new CloudFormationDeployments({sdkProvider: sdkProvider});
 
