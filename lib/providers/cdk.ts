@@ -10,6 +10,7 @@ import { increaseVerbosity } from 'aws-cdk/lib/logging'
 import { PluginHost } from 'aws-cdk/lib/plugin'
 import * as contextproviders from 'aws-cdk/lib/context-providers'
 import { DeployStackResult } from 'aws-cdk/lib/api/deploy-stack';
+import { CloudAssembly } from 'aws-cdk/lib/api/cxapp/cloud-assembly';
 
 export interface CDKProviderProps {
     account: string;
@@ -67,46 +68,45 @@ export class CDK {
         console.log(s.environment);
 
         const configuration = new Configuration();
-        configuration.settings.get
         await configuration.load();
 
         increaseVerbosity();
 
         const sdkProvider = await SdkProvider.withAwsCliCompatibleDefaults({});
 
-        const cloudExecutable = new CloudExecutable({
-            configuration,
-            sdkProvider,
-            synthesizer: execProgram
-        });
+        // const cloudExecutable = new CloudExecutable({
+        //     configuration,
+        //     sdkProvider,
+        //     synthesizer: execProgram
+        // });
 
         const cloudformation = new CloudFormationDeployments({sdkProvider: sdkProvider});
 
-        function loadPlugins(...settings: Settings[]) {
-            const loaded = new Set<string>();
-            for (const source of settings) {
-                const plugins: string[] = source.get(['plugin']) || [];
-                for (const plugin of plugins) {
-                    const resolved = tryResolve(plugin);
-                    if (loaded.has(resolved)) { continue; }
-                    PluginHost.instance.load(plugin);
-                    loaded.add(resolved);
-                }
-            }
+        // function loadPlugins(...settings: Settings[]) {
+        //     const loaded = new Set<string>();
+        //     for (const source of settings) {
+        //         const plugins: string[] = source.get(['plugin']) || [];
+        //         for (const plugin of plugins) {
+        //             const resolved = tryResolve(plugin);
+        //             if (loaded.has(resolved)) { continue; }
+        //             PluginHost.instance.load(plugin);
+        //             loaded.add(resolved);
+        //         }
+        //     }
         
-            function tryResolve(plugin: string): string {
-                try {
-                    return require.resolve(plugin);
-                } catch (e) {
-                    throw new Error(`Unable to resolve plug-in: ${plugin}`);
-                }
-            }
-        }
+        //     function tryResolve(plugin: string): string {
+        //         try {
+        //             return require.resolve(plugin);
+        //         } catch (e) {
+        //             throw new Error(`Unable to resolve plug-in: ${plugin}`);
+        //         }
+        //     }
+        // }
     
-        loadPlugins(configuration.settings);
+        // loadPlugins(configuration.settings);
 
-        const assembly = app.synth();
-
+        let assembly = app.synth();
+        let cloudAssembly: CloudAssembly;
         if(assembly.manifest.missing && assembly.manifest.missing.length > 0) {
             console.log(assembly.manifest.missing);
             await contextproviders.provideContextValues(
@@ -117,18 +117,19 @@ export class CDK {
             await configuration.saveContext();
         }
 
-        const contextFile = require('cdk.context.json');
-        console.log(JSON.stringify(contextFile, null, 2));
+        cloudAssembly = new CloudAssembly(assembly);
+
+        // const contextFile = require('cdk.context.json');
+        // console.log(JSON.stringify(contextFile, null, 2));
        
-        const stack = assembly.stacks[0];
+        const stack = cloudAssembly.assembly.stacks[0];
         
         let result: DeployStackResult;
         try {
              result = await cloudformation.deployStack({
                 stack,
                 deployName: stack.stackName,
-                force: true,
-
+                force: true
             });
         } catch(err) {
             return {
