@@ -117,13 +117,18 @@ export class CDK {
             await configuration.saveContext();
         }
 
+        const contextFile = require('cdk.context.json');
+        console.log(JSON.stringify(contextFile, null, 2));
+       
         const stack = assembly.stacks[0];
+        
         let result: DeployStackResult;
         try {
              result = await cloudformation.deployStack({
                 stack,
                 deployName: stack.stackName,
-                force: true
+                force: true,
+
             });
         } catch(err) {
             return {
