@@ -6,6 +6,7 @@ import { execProgram } from 'aws-cdk/lib/api/cxapp/exec';
 import { CloudFormationDeployments } from 'aws-cdk/lib/api/cloudformation-deployments';
 import { CloudExecutable } from 'aws-cdk/lib/api/cxapp/cloud-executable';
 import { CdkToolkit } from 'aws-cdk/lib/cdk-toolkit';
+import { increaseVerbosity } from 'aws-cdk/lib/logging'
 import { PluginHost } from 'aws-cdk/lib/plugin'
 import * as contextproviders from 'aws-cdk/lib/context-providers'
 import { DeployStackResult } from 'aws-cdk/lib/api/deploy-stack';
@@ -66,7 +67,10 @@ export class CDK {
         console.log(s.environment);
 
         const configuration = new Configuration();
+        configuration.settings.get
         await configuration.load();
+
+        increaseVerbosity();
 
         const sdkProvider = await SdkProvider.withAwsCliCompatibleDefaults({});
 
@@ -75,7 +79,7 @@ export class CDK {
             sdkProvider,
             synthesizer: execProgram
         });
-        
+
         const cloudformation = new CloudFormationDeployments({sdkProvider: sdkProvider});
 
         function loadPlugins(...settings: Settings[]) {
