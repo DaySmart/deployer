@@ -108,20 +108,22 @@ export class CDK {
 
         let assembly = app.synth();
         let cloudAssembly: CloudAssembly;
-        // while(assembly.manifest.missing && assembly.manifest.missing.length > 0) {
-            
-        // }
+        let i = 0
+        while((assembly.manifest.missing && assembly.manifest.missing.length > 0) || i < 3) {
+            if(assembly.manifest.missing && assembly.manifest.missing.length > 0) {
+                console.log(assembly.manifest.missing);
+                await contextproviders.provideContextValues(
+                    assembly.manifest.missing,
+                    configuration.context,
+                    sdkProvider
+                );
+                await configuration.saveContext();
+                
+                assembly = app.synth({force: true});
+                console.log(assembly.stacks[0].template);
+            }
 
-        if(assembly.manifest.missing && assembly.manifest.missing.length > 0) {
-            console.log(assembly.manifest.missing);
-            await contextproviders.provideContextValues(
-                assembly.manifest.missing,
-                configuration.context,
-                sdkProvider
-            );
-            await configuration.saveContext();
-
-            assembly = app.synth({force: true});
+            i++;
         }
 
         cloudAssembly = new CloudAssembly(assembly);
