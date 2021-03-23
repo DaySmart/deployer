@@ -117,7 +117,7 @@ export class CDK {
                 );
                 await configuration.saveContext();
 
-                app.synth();
+                assembly = app.synth();
             }
         }
 
