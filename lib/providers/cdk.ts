@@ -114,6 +114,7 @@ export class CDK {
                 configuration.context,
                 sdkProvider
             );
+            await configuration.saveContext();
         }
 
         const stack = assembly.stacks[0];
