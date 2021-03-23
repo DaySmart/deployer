@@ -116,6 +116,8 @@ export class CDK {
                     sdkProvider
                 );
                 await configuration.saveContext();
+
+                app.synth();
             }
         }
 
