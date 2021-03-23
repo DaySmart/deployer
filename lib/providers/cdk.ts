@@ -5,7 +5,9 @@ import { Settings, Configuration } from 'aws-cdk/lib/settings';
 import { execProgram } from 'aws-cdk/lib/api/cxapp/exec';
 import { CloudFormationDeployments } from 'aws-cdk/lib/api/cloudformation-deployments';
 import { CloudExecutable } from 'aws-cdk/lib/api/cxapp/cloud-executable';
+import { CdkToolkit } from 'aws-cdk/lib/cdk-toolkit';
 import { PluginHost } from 'aws-cdk/lib/plugin'
+import * as contextproviders from 'aws-cdk/lib/context-providers'
 import { DeployStackResult } from 'aws-cdk/lib/api/deploy-stack';
 
 export interface CDKProviderProps {
@@ -72,7 +74,8 @@ export class CDK {
             configuration,
             sdkProvider,
             synthesizer: execProgram
-        })
+        });
+        
         const cloudformation = new CloudFormationDeployments({sdkProvider: sdkProvider});
 
         function loadPlugins(...settings: Settings[]) {
@@ -99,6 +102,16 @@ export class CDK {
         loadPlugins(configuration.settings);
 
         const assembly = app.synth();
+
+        if(assembly.manifest.missing && assembly.manifest.missing.length > 0) {
+            console.log(assembly.manifest.missing);
+            await contextproviders.provideContextValues(
+                assembly.manifest.missing,
+                configuration.context,
+                sdkProvider
+            );
+        }
+
         const stack = assembly.stacks[0];
         let result: DeployStackResult;
         try {
