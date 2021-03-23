@@ -1,7 +1,11 @@
 'use strict'
 import cdk = require('@aws-cdk/core');
 import { SdkProvider } from 'aws-cdk/lib/api/aws-auth';
+import { Settings, Configuration } from 'aws-cdk/lib/settings';
+import { execProgram } from 'aws-cdk/lib/api/cxapp/exec';
 import { CloudFormationDeployments } from 'aws-cdk/lib/api/cloudformation-deployments';
+import { CloudExecutable } from 'aws-cdk/lib/api/cxapp/cloud-executable';
+import { PluginHost } from 'aws-cdk/lib/plugin'
 import { DeployStackResult } from 'aws-cdk/lib/api/deploy-stack';
 
 export interface CDKProviderProps {
@@ -58,11 +62,43 @@ export class CDK {
             }
         });
         console.log(s.environment);
-        const assembly = app.synth();
+
+        const configuration = new Configuration();
+        await configuration.load();
 
         const sdkProvider = await SdkProvider.withAwsCliCompatibleDefaults({});
+
+        const cloudExecutable = new CloudExecutable({
+            configuration,
+            sdkProvider,
+            synthesizer: execProgram
+        })
         const cloudformation = new CloudFormationDeployments({sdkProvider: sdkProvider});
 
+        function loadPlugins(...settings: Settings[]) {
+            const loaded = new Set<string>();
+            for (const source of settings) {
+                const plugins: string[] = source.get(['plugin']) || [];
+                for (const plugin of plugins) {
+                    const resolved = tryResolve(plugin);
+                    if (loaded.has(resolved)) { continue; }
+                    PluginHost.instance.load(plugin);
+                    loaded.add(resolved);
+                }
+            }
+        
+            function tryResolve(plugin: string): string {
+                try {
+                    return require.resolve(plugin);
+                } catch (e) {
+                    throw new Error(`Unable to resolve plug-in: ${plugin}`);
+                }
+            }
+        }
+    
+        loadPlugins(configuration.settings);
+
+        const assembly = app.synth();
         const stack = assembly.stacks[0];
         let result: DeployStackResult;
         try {
@@ -72,7 +108,11 @@ export class CDK {
                 force: true
             });
         } catch(err) {
-            throw err;
+            return {
+                result: false,
+                exception: err,
+                outputs: []
+            }
         }
         
         if(result.noOp) {

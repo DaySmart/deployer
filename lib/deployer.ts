@@ -77,6 +77,10 @@ class Deployer {
             })
         }
 
+        if(deployResp.exception) {
+            throw deployResp.exception;
+        }
+
         // Store the component in the environment service with it's outputs
         // if(deployResp.outputs) {
         //     await deployResp.outputs.forEach((output: any) => {
