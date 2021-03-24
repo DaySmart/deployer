@@ -1,7 +1,7 @@
 'use strict'
 import cdk = require('@aws-cdk/core');
 import { SdkProvider } from 'aws-cdk/lib/api/aws-auth';
-import { Settings, Configuration } from 'aws-cdk/lib/settings';
+import { Settings, Configuration, Command } from 'aws-cdk/lib/settings';
 import { execProgram } from 'aws-cdk/lib/api/cxapp/exec';
 import { CloudFormationDeployments } from 'aws-cdk/lib/api/cloudformation-deployments';
 import { CloudExecutable } from 'aws-cdk/lib/api/cxapp/cloud-executable';
@@ -10,7 +10,10 @@ import { increaseVerbosity } from 'aws-cdk/lib/logging'
 import { PluginHost } from 'aws-cdk/lib/plugin'
 import * as contextproviders from 'aws-cdk/lib/context-providers'
 import { DeployStackResult } from 'aws-cdk/lib/api/deploy-stack';
-import { CloudAssembly } from 'aws-cdk/lib/api/cxapp/cloud-assembly';
+import * as cxapi from '@aws-cdk/cx-api/lib/cloud-assembly';
+import { CloudAssembly } from 'aws-cdk/lib/api/cxapp/cloud-assembly'
+import { synthesize } from '@aws-cdk/core/lib/private/synthesis';
+import { DefaultStackSynthesizer } from '@aws-cdk/core';
 
 export interface CDKProviderProps {
     account: string;
@@ -35,10 +38,10 @@ export class CDK {
 
     async deploy() {
         let construct: any;
+        const { createRequireFromPath } = require('module')
         if(this.config.constructPath) {
             construct = await import(process.cwd() + '/' + this.config.constructPath);
         } else if(this.config.constructPackage) {
-            const { createRequireFromPath } = require('module')
             const requireUtil = createRequireFromPath(process.cwd() + '/node_modules')
             construct = requireUtil(this.config.constructPackage);
         } else {
@@ -62,76 +65,38 @@ export class CDK {
         const configuration = new Configuration();
         await configuration.load();
 
-        const app = new cdk.App({context: configuration.context});
+        const app = new cdk.App({context: { 
+                ...configuration.context.all
+            },
+            outdir: 'cdk.frankenstack.out'
+        });
         const s = new CdkStack(app, `${env}-${componentName}`, {
             env: {
                 account: this.config.account,
                 region: this.config.region
-            }
+            },
+            synthesizer: new DefaultStackSynthesizer()
         });
-        console.log(s.environment);
+        // console.log(s.environment);
 
         increaseVerbosity();
-
+        app.synth();
         const sdkProvider = await SdkProvider.withAwsCliCompatibleDefaults({});
 
         const cloudExecutable = new CloudExecutable({
             configuration,
             sdkProvider,
-            synthesizer: execProgram
+            synthesizer: async (aws: SdkProvider, config: Configuration): Promise<cxapi.CloudAssembly> => {
+                let stackAssembly = app.synth({force: true});
+                return new cxapi.CloudAssembly(stackAssembly.directory);
+            }
         });
+
+        const assembly = await cloudExecutable.synthesize();
 
         const cloudformation = new CloudFormationDeployments({sdkProvider: sdkProvider});
 
-        // function loadPlugins(...settings: Settings[]) {
-        //     const loaded = new Set<string>();
-        //     for (const source of settings) {
-        //         const plugins: string[] = source.get(['plugin']) || [];
-        //         for (const plugin of plugins) {
-        //             const resolved = tryResolve(plugin);
-        //             if (loaded.has(resolved)) { continue; }
-        //             PluginHost.instance.load(plugin);
-        //             loaded.add(resolved);
-        //         }
-        //     }
-        
-        //     function tryResolve(plugin: string): string {
-        //         try {
-        //             return require.resolve(plugin);
-        //         } catch (e) {
-        //             throw new Error(`Unable to resolve plug-in: ${plugin}`);
-        //         }
-        //     }
-        // }
-    
-        // loadPlugins(configuration.settings);
-
-        let assembly = app.synth();
-        let cloudAssembly: CloudAssembly;
-        let i = 0
-        while((assembly.manifest.missing && assembly.manifest.missing.length > 0) || i < 3) {
-            if(assembly.manifest.missing && assembly.manifest.missing.length > 0) {
-                console.log(assembly.manifest.missing);
-                await contextproviders.provideContextValues(
-                    assembly.manifest.missing,
-                    configuration.context,
-                    sdkProvider
-                );
-                await configuration.saveContext();
-                
-                assembly = app.synth({force: true});
-                console.log(assembly.stacks[0].template);
-            }
-
-            i++;
-        }
-
-        cloudAssembly = new CloudAssembly(assembly);
-
-        // const contextFile = require('cdk.context.json');
-        // console.log(JSON.stringify(contextFile, null, 2));
-       
-        const stack = cloudAssembly.assembly.stacks[0];
+        const stack = assembly.assembly.stacks[0];
         
         let result: DeployStackResult;
         try {
