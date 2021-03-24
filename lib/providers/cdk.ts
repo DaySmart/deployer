@@ -75,7 +75,7 @@ export class CDK {
                 account: this.config.account,
                 region: this.config.region
             },
-            synthesizer: new DefaultStackSynthesizer()
+            // synthesizer: new DefaultStackSynthesizer()
         });
         // console.log(s.environment);
 
