@@ -1,19 +1,11 @@
 'use strict'
 import cdk = require('@aws-cdk/core');
 import { SdkProvider } from 'aws-cdk/lib/api/aws-auth';
-import { Settings, Configuration, Command } from 'aws-cdk/lib/settings';
-import { execProgram } from 'aws-cdk/lib/api/cxapp/exec';
+import { Configuration } from 'aws-cdk/lib/settings';
 import { CloudFormationDeployments } from 'aws-cdk/lib/api/cloudformation-deployments';
 import { CloudExecutable } from 'aws-cdk/lib/api/cxapp/cloud-executable';
-import { CdkToolkit } from 'aws-cdk/lib/cdk-toolkit';
-import { increaseVerbosity } from 'aws-cdk/lib/logging'
-import { PluginHost } from 'aws-cdk/lib/plugin'
-import * as contextproviders from 'aws-cdk/lib/context-providers'
 import { DeployStackResult } from 'aws-cdk/lib/api/deploy-stack';
 import * as cxapi from '@aws-cdk/cx-api/lib/cloud-assembly';
-import { CloudAssembly } from 'aws-cdk/lib/api/cxapp/cloud-assembly'
-import { synthesize } from '@aws-cdk/core/lib/private/synthesis';
-import { DefaultStackSynthesizer } from '@aws-cdk/core';
 
 export interface CDKProviderProps {
     account: string;
@@ -52,7 +44,6 @@ export class CDK {
         const componentName = this.name;
         const env = this.env;
         const componentProps = this.props;
-        console.log(componentProps);
         const config = this.config;
         class CdkStack extends cdk.Stack {
             constructor(scope: cdk.Construct, id: string, props: any) {
@@ -74,12 +65,8 @@ export class CDK {
             env: {
                 account: this.config.account,
                 region: this.config.region
-            },
-            // synthesizer: new DefaultStackSynthesizer()
+            }
         });
-        // console.log(s.environment);
-
-        increaseVerbosity();
         app.synth();
         const sdkProvider = await SdkProvider.withAwsCliCompatibleDefaults({});
 
