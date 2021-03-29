@@ -6,6 +6,7 @@ import { CloudFormationDeployments } from 'aws-cdk/lib/api/cloudformation-deploy
 import { CloudExecutable } from 'aws-cdk/lib/api/cxapp/cloud-executable';
 import { DeployStackResult } from 'aws-cdk/lib/api/deploy-stack';
 import * as cxapi from '@aws-cdk/cx-api/lib/cloud-assembly';
+import { increaseVerbosity } from 'aws-cdk/lib/logging'
 
 export interface CDKProviderProps {
     account: string;
@@ -55,6 +56,8 @@ export class CDK {
 
         const configuration = new Configuration();
         await configuration.load();
+
+        increaseVerbosity();
 
         const app = new cdk.App({context: { 
                 ...configuration.context.all
