@@ -64,18 +64,35 @@ export class CDK {
 
         increaseVerbosity();
 
-        const app = new cdk.App({context: { 
+        function refreshApp(account: string, region: string): cdk.App {
+            const app = new cdk.App({context: { 
                 ...configuration.context.all
             },
             outdir: 'cdk.frankenstack.out'
-        });
-        const s = new CdkStack(app, `${env}-${componentName}`, {
-            env: {
-                account: this.config.account,
-                region: this.config.region
-            }
-        });
-        app.synth();
+            });
+            const s = new CdkStack(app, `${env}-${componentName}`, {
+                env: {
+                    account: account,
+                    region: region
+                }
+            });
+            app.synth({force: true});
+            return app;
+        }
+
+        // const app = new cdk.App({context: { 
+        //         ...configuration.context.all
+        //     },
+        //     outdir: 'cdk.frankenstack.out'
+        // });
+        // const s = new CdkStack(app, `${env}-${componentName}`, {
+        //     env: {
+        //         account: this.config.account,
+        //         region: this.config.region
+        //     }
+        // });
+        // app.synth();
+        let app = refreshApp(this.config.account, this.config.region);
         const sdkProvider = await SdkProvider.withAwsCliCompatibleDefaults({});
 
         const cloudExecutable = new CloudExecutable({
@@ -83,6 +100,7 @@ export class CDK {
             sdkProvider,
             synthesizer: async (aws: SdkProvider, config: Configuration): Promise<cxapi.CloudAssembly> => {
                 await config.load();
+                app = refreshApp(this.config.account, this.config.region);
                 let stackAssembly = app.synth({force: true});
                 return new cxapi.CloudAssembly(stackAssembly.directory);
             }
