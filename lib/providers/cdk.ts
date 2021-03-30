@@ -7,7 +7,8 @@ import { CloudFormationDeployments } from 'aws-cdk/lib/api/cloudformation-deploy
 import { CloudExecutable } from 'aws-cdk/lib/api/cxapp/cloud-executable';
 import { DeployStackResult } from 'aws-cdk/lib/api/deploy-stack';
 import * as cxapi from '@aws-cdk/cx-api/lib/cloud-assembly';
-import { increaseVerbosity } from 'aws-cdk/lib/logging'
+import { increaseVerbosity } from 'aws-cdk/lib/logging';
+import { DefaultStackSynthesizer } from '@aws-cdk/core';
 
 export interface CDKProviderProps {
     account: string;
@@ -73,7 +74,8 @@ export class CDK {
             env: {
                 account: this.config.account,
                 region: this.config.region
-            }
+            },
+            synthesizer: new DefaultStackSynthesizer()
         });
         app.synth();
         const sdkProvider = await SdkProvider.withAwsCliCompatibleDefaults({});
