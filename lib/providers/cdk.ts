@@ -8,7 +8,6 @@ import { CloudExecutable } from 'aws-cdk/lib/api/cxapp/cloud-executable';
 import { DeployStackResult } from 'aws-cdk/lib/api/deploy-stack';
 import * as cxapi from '@aws-cdk/cx-api/lib/cloud-assembly';
 import { increaseVerbosity } from 'aws-cdk/lib/logging';
-import { DefaultStackSynthesizer } from '@aws-cdk/core';
 
 export interface CDKProviderProps {
     account: string;
@@ -74,8 +73,7 @@ export class CDK {
             env: {
                 account: this.config.account,
                 region: this.config.region
-            },
-            synthesizer: new DefaultStackSynthesizer()
+            }
         });
         app.synth();
         const sdkProvider = await SdkProvider.withAwsCliCompatibleDefaults({});
@@ -84,6 +82,7 @@ export class CDK {
             configuration,
             sdkProvider,
             synthesizer: async (aws: SdkProvider, config: Configuration): Promise<cxapi.CloudAssembly> => {
+                await config.load();
                 let stackAssembly = app.synth({force: true});
                 return new cxapi.CloudAssembly(stackAssembly.directory);
             }
