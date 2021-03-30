@@ -1,4 +1,5 @@
 'use strict'
+import fs = require('fs');
 import cdk = require('@aws-cdk/core');
 import { SdkProvider } from 'aws-cdk/lib/api/aws-auth';
 import { Configuration } from 'aws-cdk/lib/settings';
@@ -52,6 +53,10 @@ export class CDK {
 
                 new construct[constructName](this, constructName, componentProps);
             }
+        }
+
+        if(!fs.existsSync('cdk.context.json')) {
+            fs.writeFileSync('cdk.context.json', JSON.stringify({}));
         }
 
         const configuration = new Configuration();
