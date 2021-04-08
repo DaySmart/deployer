@@ -48,7 +48,7 @@ export class ServerlessV1 {
 
     writeConfigFile() {
         if(this.input) {
-            let output = yaml.safeDump(this.input);
+            let output = yaml.dump(this.input);
 
             let deployerDir = path.join(process.cwd(), '.deployer')
             if(!fs.existsSync(deployerDir)) {
