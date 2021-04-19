@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const resolve = require('ncjsm/resolve/sync');
 
-export class ServerlessV1 {
+export class Serverless {
 	public stage: any;
 	public input: any;
 	public region: any;
