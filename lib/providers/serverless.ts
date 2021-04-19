@@ -1,8 +1,8 @@
 'use strict'
-const serverless = require('serverless');
 const yaml = require('js-yaml');
 const fs = require('fs');
 const path = require('path');
+const resolve = require('ncjsm/resolve/sync');
 
 export class ServerlessV1 {
 	public stage: any;
@@ -16,20 +16,62 @@ export class ServerlessV1 {
     }
 
     async deploy() {
-        process.argv.push('deploy');
-        process.argv.push('-v');
-
-        if(this.region) {
-            process.argv.push('-r', this.region);
-        }
-
-        if(this.stage) {
-            process.argv.push('-s', this.stage);
-        }
-
         this.writeConfigFile();
-        console.log('provider args', process.argv)
-        const sls = new serverless({});
+
+        const serverlessPath = resolve(process.cwd(), 'serverless').realPath;
+        const serverlessVersion = require(path.resolve(serverlessPath, '../../package.json')).version;
+        const serverless = require(serverlessPath);
+        let sls;
+        if(serverlessVersion[0] === "2") {
+            const commands = ['deploy'];
+            let options = Object.create(null);
+            options['verbose'] = true;
+            options['region'] = this.region;
+            options['stage'] = this.stage;
+
+            const configPath = path.join(process.cwd(), 'serverless.yml');
+
+            const readConfiguration = require(path.resolve(serverlessPath, '../configuration/read'));
+            const configuration = await readConfiguration(configPath);
+
+            const resolveVariablesMeta = require(path.resolve(serverlessPath, '../configuration/variables/resolve-meta'));
+            const resolveVariables = require(path.resolve(serverlessPath, '../configuration/variables/resolve'));
+            const variableSources = {
+                env: { ...require(path.resolve(serverlessPath, '../configuration/variables/sources/env')), isIncomplete: true },
+                file: require(path.resolve(serverlessPath, '../configuration/variables/sources/file')),
+                opt: require(path.resolve(serverlessPath, '../configuration/variables/sources/opt')),
+                self: require(path.resolve(serverlessPath, '../configuration/variables/sources/self')),
+                strToBool: require(path.resolve(serverlessPath, '../configuration/variables/sources/str-to-bool')),
+            };
+            const variablesMeta = resolveVariablesMeta(configuration);
+            await resolveVariables({
+                servicePath: process.cwd(),
+                configuration,
+                variablesMeta,
+                sources: variableSources,
+                options,
+            });
+
+            sls = new serverless({
+                configuration,
+                configurationPath: configPath,
+                commands,
+                options,
+            });
+        } else {
+            process.argv.push('deploy');
+            process.argv.push('-v');
+
+            if(this.region) {
+                process.argv.push('-r', this.region);
+            }
+
+            if(this.stage) {
+                process.argv.push('-s', this.stage);
+            }
+            sls = new serverless({});
+        }
+
         let success = true;
         await sls.init();
         try {
@@ -61,11 +103,20 @@ export class ServerlessV1 {
 
     async getStackOutput(serverless: any) {
         const stackName = serverless.providers.aws.naming.getStackName();
-        const stackOutputs = serverless.providers.aws
-            .request('CloudFormation', 'describeStacks', { StackName: stackName })
-            .then((result: any) => {
-                return result.Stacks[0].Outputs
-            });
+        let stackOutputs;
+        if(serverless.getVersion()[0] === '2') {
+            console.log("outputting v2");
+            const result = await serverless.providers.aws
+                .request('CloudFormation', 'describeStacks', { StackName: stackName })
+            stackOutputs = result.Stacks[0].Outputs;
+
+        } else {
+            stackOutputs = serverless.providers.aws
+                .request('CloudFormation', 'describeStacks', { StackName: stackName })
+                .then((result: any) => {
+                    return result.Stacks[0].Outputs
+                });
+        }
         return stackOutputs.map((output: any) => {return {Key: output.OutputKey, Value: output.OutputValue}});
     }
 }
