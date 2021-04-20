@@ -1,6 +1,6 @@
 const parseYaml = require('./utils/parseYaml');
 import { CDK } from './providers/cdk';
-import { ServerlessV1 } from './providers/serverless';
+import { Serverless } from './providers/serverless';
 const HardCoded = require('./providers/hardcoded');
 const DsicollectionDynamicEnvironment = require('./providers/dsicollectionDynamicEnvironment');
 const environmentService = require('./service/environmentService');
@@ -49,7 +49,7 @@ class Deployer {
         }
         switch(providerType) {
             case 'serverless-framework':
-                provider = new ServerlessV1(this.component);
+                provider = new Serverless(this.component);
                 break;
             case 'hardcoded':
                 provider = new HardCoded(this.component);
