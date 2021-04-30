@@ -33,7 +33,8 @@ class Deployer {
         } else if(this.command === 'destroy') {
             await this.destroy();
         } else {
-            console.error(`The command ${this.command} is not implemented`);
+            this.publishResultToFrankenstack();
+            throw `The command ${this.command} is not implemented`;
         }
     }
 
@@ -47,38 +48,34 @@ class Deployer {
         } else if(this.component.provider.Name) {
             providerType = this.component.provider.Name
         }
-        switch(providerType) {
-            case 'serverless-framework':
-                provider = new Serverless(this.component);
-                break;
-            case 'hardcoded':
-                provider = new HardCoded(this.component);
-                break;
-            case 'dsicollection-dynamic-environment':
-                provider = new DsicollectionDynamicEnvironment(this.component);
-                break;
-            case 'cdk':
-                provider = new CDK(this.component.name, this.component.env, this.component.provider.config, this.component.inputs);
-                break;
-            default:
-                throw(`The provider ${providerType} is not implemented!`);
-        }
+        
+        let deployResp: any = {};
+        try {
+            switch(providerType) {
+                case 'serverless-framework':
+                    provider = new Serverless(this.component);
+                    break;
+                case 'hardcoded':
+                    provider = new HardCoded(this.component);
+                    break;
+                case 'dsicollection-dynamic-environment':
+                    provider = new DsicollectionDynamicEnvironment(this.component);
+                    break;
+                case 'cdk':
+                    provider = new CDK(this.component.name, this.component.env, this.component.provider.config, this.component.inputs);
+                    break;
+                default:
+                    throw(`The provider ${providerType} is not implemented!`);
+            }
 
-        const deployResp = await provider.deploy();
-
-        if(this.jobRunGuid && this.deploymentGuid) {
-            await snsClient.publishJobRunFinishedMessage({
-                deploymentGuid: this.deploymentGuid,
-                env: this.component.env,
-                jobRunGuid: this.jobRunGuid,
-                name: this.component.name,
-                status: deployResp.result ? 'Success' : 'Failed',
-                outputs: JSON.stringify(deployResp.outputs)
-            })
-        }
-
-        if(deployResp.exception) {
-            throw deployResp.exception;
+            deployResp = await provider.deploy();
+        } catch(err) {
+            throw err;
+        } finally {
+            await this.publishResultToFrankenstack(deployResp);
+            if(deployResp.exception) {
+                throw deployResp.exception;
+            }
         }
 
         // Store the component in the environment service with it's outputs
@@ -87,6 +84,25 @@ class Deployer {
         //         environmentService.putComponentOutput(this.component.env, this.component.name, output.key, output.value)
         //     });
         // }
+    }
+
+    async publishResultToFrankenstack(result?: any) {
+        if(this.jobRunGuid && this.deploymentGuid) {
+            var status = 'Failed';
+            var outputs = []
+            if(result) {
+                status = result.result ? 'Success' : 'Failed'
+                outputs = result.outputs || [];
+            }
+            await snsClient.publishJobRunFinishedMessage({
+                deploymentGuid: this.deploymentGuid,
+                env: this.component.env,
+                jobRunGuid: this.jobRunGuid,
+                name: this.component.name,
+                status: status,
+                outputs: JSON.stringify(outputs)
+            })
+        }
     }
 
     async destroy() {
