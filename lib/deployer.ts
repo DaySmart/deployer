@@ -121,6 +121,12 @@ class Deployer {
                         ...obj,
                         [item.Key]: item.Value
                     }
+                }, {}) : undefined,
+                account: (rawProvider.Account) ? rawProvider.Account.reduce((obj: any, item: any) => {
+                    return {
+                        ...obj,
+                        [item.Key]: item.Value
+                    }
                 }, {}) : undefined
             }
         } catch(err) {
