@@ -92,8 +92,8 @@ export class CDK {
         let accountId: string;
         let awsCredentials;
         if(this.awsAccount) {
-            accountId = this.config.account.accountId;
-            awsCredentials = this.config.account.credentials;
+            accountId = this.awsAccount.accountId;
+            awsCredentials = this.awsAccount.credentials;
         } else {
             accountId = this.config.account;
         }
