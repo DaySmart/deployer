@@ -39,6 +39,7 @@ export class CDK {
     }
 
     async deploy() {
+        console.log('awsAccount', this.awsAccount);
         let construct: any;
         const { createRequireFromPath } = require('module')
         if(this.config.constructPath) {
@@ -96,9 +97,12 @@ export class CDK {
         } else {
             accountId = this.config.account;
         }
+        console.log('accountId', accountId);
+        console.log('credentials', awsCredentials)
 
         let app = refreshApp(accountId, this.config.region);
         const sdkProvider = await this.getSdkProvider(awsCredentials);
+        console.log('sdkProvider', sdkProvider);
 
         const cloudExecutable = new CloudExecutable({
             configuration,
@@ -143,6 +147,7 @@ export class CDK {
     }
 
     async getSdkProvider(paramaterName?: string): Promise<SdkProvider> {
+        console.log('getSdkProvider parameterName', paramaterName);
         if(paramaterName) {
             const ssm = new SSM();
             const param = await ssm.getParameter({
@@ -151,6 +156,7 @@ export class CDK {
             }).promise();
 
             if(param.Parameter && param.Parameter.Value) {
+                console.log('getSdkProvider paramValue', param.Parameter.Value);
                 const credentials = JSON.parse(param.Parameter.Value);
                 const credentialProviders = [
                     () => { 
@@ -162,7 +168,7 @@ export class CDK {
                 ]
     
                 const chain = new CredentialProviderChain(credentialProviders)
-    
+
                 return new SdkProvider(chain, this.config.region, {})
             } 
         }
