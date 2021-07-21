@@ -26,27 +26,6 @@ export class Serverless {
     async deploy() {
         this.writeConfigFile();
 
-        if(this.account) {
-            const credentialsParam = this.account.credentials;
-            if(!credentialsParam) {
-                throw "AWS Account is missing credentials parameter";
-            }
-
-            const ssm = new SSM();
-            const param = await ssm.getParameter({
-                Name: credentialsParam.replace('ssm:', ''),
-                WithDecryption: true
-            }).promise();
-
-            if(param.Parameter && param.Parameter.Value) {
-                const credentials = JSON.parse(param.Parameter.Value);
-                process.env.AWS_ACCESS_KEY_ID = credentials.AWS_ACCESS_KEY_ID;
-                process.env.AWS_SECRET_ACCESS_KEY = credentials.AWS_SECRET_ACCESS_KEY;
-            } else {
-                throw "Failed to read value from AWS account parameter";
-            }
-        }
-
         const serverlessPath = resolve(process.cwd(), 'serverless').realPath;
         const serverlessVersion = require(path.resolve(serverlessPath, '../../package.json')).version;
         const serverless = require(serverlessPath);
@@ -57,6 +36,27 @@ export class Serverless {
             options['verbose'] = true;
             options['region'] = this.region;
             options['stage'] = this.stage;
+
+            if(this.account) {
+                const credentialsParam = this.account.credentials;
+                if(!credentialsParam) {
+                    throw "AWS Account is missing credentials parameter";
+                }
+    
+                const ssm = new SSM();
+                const param = await ssm.getParameter({
+                    Name: credentialsParam.replace('ssm:', ''),
+                    WithDecryption: true
+                }).promise();
+    
+                if(param.Parameter && param.Parameter.Value) {
+                    const credentials = JSON.parse(param.Parameter.Value);
+                    options['key'] = credentials.AWS_ACCESS_KEY_ID;
+                    options['secret'] = credentials.AWS_SECRET_ACCESS_KEY;
+                } else {
+                    throw "Failed to read value from AWS account parameter";
+                }
+            }
 
             const configPath = path.join(process.cwd(), 'serverless.yml');
 
