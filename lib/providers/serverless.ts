@@ -3,20 +3,49 @@ const yaml = require('js-yaml');
 const fs = require('fs');
 const path = require('path');
 const resolve = require('ncjsm/resolve/sync');
+import { SSM } from 'aws-sdk';
+
+export interface AWSAccount {
+    accountId: string;
+    credentials: string;
+}
 
 export class Serverless {
 	public stage: any;
 	public input: any;
 	public region: any;
+    public account: AWSAccount | undefined;
 
     constructor(config: any) {
         this.stage = config.env || config.Env;
         this.input = config.inputs || config.Inputs;
         this.region = config.region || 'us-east-1';
+        this.account = config.provider.account;
     }
 
     async deploy() {
         this.writeConfigFile();
+
+        if(this.account) {
+            const credentialsParam = this.account.credentials;
+            if(!credentialsParam) {
+                throw "AWS Account is missing credentials parameter";
+            }
+
+            const ssm = new SSM();
+            const param = await ssm.getParameter({
+                Name: credentialsParam.replace('ssm:', ''),
+                WithDecryption: true
+            }).promise();
+
+            if(param.Parameter && param.Parameter.Value) {
+                const credentials = JSON.parse(param.Parameter.Value);
+                process.env.AWS_ACCESS_KEY_ID = credentials.AWS_ACCESS_KEY_ID;
+                process.env.AWS_SECRET_ACCESS_KEY = credentials.AWS_SECRET_ACCESS_KEY;
+            } else {
+                throw "Failed to read value from AWS account parameter";
+            }
+        }
 
         const serverlessPath = resolve(process.cwd(), 'serverless').realPath;
         const serverlessVersion = require(path.resolve(serverlessPath, '../../package.json')).version;
