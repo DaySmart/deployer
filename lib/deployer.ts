@@ -122,12 +122,7 @@ class Deployer {
                         [item.Key]: item.Value
                     }
                 }, {}) : undefined,
-                account: (rawProvider.Account) ? rawProvider.Account.reduce((obj: any, item: any) => {
-                    return {
-                        ...obj,
-                        [item.Key]: item.Value
-                    }
-                }, {}) : undefined
+                account: (rawProvider.Account) ? rawProvider.Account : undefined
             }
         } catch(err) {
             provider = process.env.COMPONENT_PROVIDER
