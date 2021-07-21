@@ -18,17 +18,24 @@ export interface CDKProviderProps {
     constructName: string;
 }
 
+export interface AWSAccount {
+    accountId: string;
+    credentials: string;
+}
+
 export class CDK {
     readonly name: string;
     readonly env: string;
     readonly config: CDKProviderProps;
     readonly props: any;
+    readonly awsAccount: AWSAccount | undefined;
 
-    constructor(name: string, env: string, config: CDKProviderProps, props: any) {
+    constructor(name: string, env: string, config: CDKProviderProps, props: any, account?: AWSAccount) {
         this.name = name;
         this.env = env;
         this.config = config;
         this.props = props;
+        this.awsAccount = account;
     }
 
     async deploy() {
@@ -83,11 +90,11 @@ export class CDK {
 
         let accountId: string;
         let awsCredentials;
-        if(typeof this.config.account === 'string') {
-            accountId = this.config.account;
-        } else {
+        if(this.awsAccount) {
             accountId = this.config.account.accountId;
             awsCredentials = this.config.account.credentials;
+        } else {
+            accountId = this.config.account;
         }
 
         let app = refreshApp(accountId, this.config.region);
