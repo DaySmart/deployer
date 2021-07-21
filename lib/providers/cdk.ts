@@ -161,8 +161,8 @@ export class CDK {
                 const credentialProviders = [
                     () => { 
                         return new Credentials({
-                            accessKeyId: credentials.ACCESS_KEY,
-                            secretAccessKey: credentials.SECRET_ACCESS_KEY
+                            accessKeyId: credentials.AWS_ACCESS_KEY_ID,
+                            secretAccessKey: credentials.AWS_SECRET_ACCESS_KEY
                         })
                     }
                 ]
