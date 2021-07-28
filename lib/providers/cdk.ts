@@ -8,13 +8,19 @@ import { CloudExecutable } from 'aws-cdk/lib/api/cxapp/cloud-executable';
 import { DeployStackResult } from 'aws-cdk/lib/api/deploy-stack';
 import * as cxapi from '@aws-cdk/cx-api/lib/cloud-assembly';
 import { increaseVerbosity } from 'aws-cdk/lib/logging';
+import { Credentials, CredentialProviderChain, SSM } from 'aws-sdk';
 
 export interface CDKProviderProps {
-    account: string;
+    account: any;
     region: string;
     constructPath?: string;
     constructPackage?: string;
     constructName: string;
+}
+
+export interface AWSAccount {
+    accountId: string;
+    credentials: string;
 }
 
 export class CDK {
@@ -22,15 +28,18 @@ export class CDK {
     readonly env: string;
     readonly config: CDKProviderProps;
     readonly props: any;
+    readonly awsAccount: AWSAccount | undefined;
 
-    constructor(name: string, env: string, config: CDKProviderProps, props: any) {
+    constructor(name: string, env: string, config: CDKProviderProps, props: any, account?: AWSAccount) {
         this.name = name;
         this.env = env;
         this.config = config;
         this.props = props;
+        this.awsAccount = account;
     }
 
     async deploy() {
+        console.log('awsAccount', this.awsAccount);
         let construct: any;
         const { createRequireFromPath } = require('module')
         if(this.config.constructPath) {
@@ -80,27 +89,27 @@ export class CDK {
             return app;
         }
 
-        // const app = new cdk.App({context: { 
-        //         ...configuration.context.all
-        //     },
-        //     outdir: 'cdk.frankenstack.out'
-        // });
-        // const s = new CdkStack(app, `${env}-${componentName}`, {
-        //     env: {
-        //         account: this.config.account,
-        //         region: this.config.region
-        //     }
-        // });
-        // app.synth();
-        let app = refreshApp(this.config.account, this.config.region);
-        const sdkProvider = await SdkProvider.withAwsCliCompatibleDefaults({});
+        let accountId: string;
+        let awsCredentials;
+        if(this.awsAccount) {
+            accountId = this.awsAccount.accountId;
+            awsCredentials = this.awsAccount.credentials;
+        } else {
+            accountId = this.config.account;
+        }
+        console.log('accountId', accountId);
+        console.log('credentials', awsCredentials)
+
+        let app = refreshApp(accountId, this.config.region);
+        const sdkProvider = await this.getSdkProvider(awsCredentials);
+        console.log('sdkProvider', sdkProvider);
 
         const cloudExecutable = new CloudExecutable({
             configuration,
             sdkProvider,
             synthesizer: async (aws: SdkProvider, config: Configuration): Promise<cxapi.CloudAssembly> => {
                 await config.load();
-                app = refreshApp(this.config.account, this.config.region);
+                app = refreshApp(accountId, this.config.region);
                 let stackAssembly = app.synth({force: true});
                 return new cxapi.CloudAssembly(stackAssembly.directory);
             }
@@ -135,5 +144,34 @@ export class CDK {
             result: true,
             outputs: Object.entries(result.outputs)?.map(output => {return {Key: output[0], Value: output[1]}})
         }
+    }
+
+    async getSdkProvider(paramaterName?: string): Promise<SdkProvider> {
+        console.log('getSdkProvider parameterName', paramaterName);
+        if(paramaterName) {
+            const ssm = new SSM();
+            const param = await ssm.getParameter({
+                Name: paramaterName.replace('ssm:', ''),
+                WithDecryption: true
+            }).promise();
+
+            if(param.Parameter && param.Parameter.Value) {
+                console.log('getSdkProvider paramValue', param.Parameter.Value);
+                const credentials = JSON.parse(param.Parameter.Value);
+                const credentialProviders = [
+                    () => { 
+                        return new Credentials({
+                            accessKeyId: credentials.AWS_ACCESS_KEY_ID,
+                            secretAccessKey: credentials.AWS_SECRET_ACCESS_KEY
+                        })
+                    }
+                ]
+    
+                const chain = new CredentialProviderChain(credentialProviders)
+
+                return new SdkProvider(chain, this.config.region, {})
+            } 
+        }
+        return SdkProvider.withAwsCliCompatibleDefaults({});
     }
 }
