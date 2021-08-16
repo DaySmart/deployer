@@ -81,9 +81,16 @@ export class Serverless {
                 options,
             });
 
+            let serviceDir = process.cwd();
+
             sls = new serverless({
                 configuration,
                 configurationPath: configPath,
+                serviceDir,
+                configurationFileName: configuration && configPath.slice(serviceDir.length + 1),
+                isConfigurationResolved: true,
+                hasResolvedCommandsExternally: true,
+                isTelemetryReportedExternally: false,
                 commands,
                 options,
             });
