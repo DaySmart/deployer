@@ -70,7 +70,7 @@ export class Serverless {
             options['stage'] = this.stage;
 
             if(this.account) {
-                options['profile'] = 'frank'
+                options['aws-profile'] = 'frank'
             }
 
             const configPath = path.join(process.cwd(), 'serverless.yml');
@@ -122,7 +122,7 @@ export class Serverless {
             }
 
             if(this.account) {
-                process.argv.push('--profile', 'frank')
+                process.argv.push('--aws-profile', 'frank')
             }
             sls = new serverless({});
         }
