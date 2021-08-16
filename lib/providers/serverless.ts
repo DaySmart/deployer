@@ -47,9 +47,14 @@ export class Serverless {
 
             if(param.Parameter && param.Parameter.Value) {
                 const credentials = JSON.parse(param.Parameter.Value);
-                const { stdout, stderr } = await exec(`npx serverless config credentials --provider aws --profile frank --key ${credentials.AWS_ACCESS_KEY_ID} --secret ${credentials.AWS_SECRET_ACCESS_KEY}`)
-                console.log('stdout', stdout);
-                console.log('stderr', stderr);
+                try {
+                    const { stdout, stderr } = await exec(`npx serverless config credentials --provider aws --profile frank --key ${credentials.AWS_ACCESS_KEY_ID} --secret ${credentials.AWS_SECRET_ACCESS_KEY}`)
+                    console.log('stdout', stdout);
+                    console.log('stderr', stderr);
+                } catch(err) {
+                    console.error(err);
+                }
+                
                 // options['key'] = credentials.AWS_ACCESS_KEY_ID;
                 // options['secret'] = credentials.AWS_SECRET_ACCESS_KEY;
             } else {
