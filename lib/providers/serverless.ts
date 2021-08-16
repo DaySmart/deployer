@@ -54,9 +54,6 @@ export class Serverless {
                 } catch(err) {
                     console.error(err);
                 }
-                
-                // options['key'] = credentials.AWS_ACCESS_KEY_ID;
-                // options['secret'] = credentials.AWS_SECRET_ACCESS_KEY;
             } else {
                 throw "Failed to read value from AWS account parameter";
             }
