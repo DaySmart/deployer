@@ -134,7 +134,7 @@ class Deployer {
             name: process.env.COMPONENT_NAME,
             provider: provider,
             inputs: (process.env.COMPONENT_INPUTS) 
-                ? unflatten(JSON.parse(process.env.COMPONENT_INPUTS), {safe: true}).reduce((obj: any, item: any) => {
+                ? unflatten(JSON.parse(process.env.COMPONENT_INPUTS)).reduce((obj: any, item: any) => {
                     return {
                         ...obj,
                         [item.Key]: item.Value
