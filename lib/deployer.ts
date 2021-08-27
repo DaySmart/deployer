@@ -5,6 +5,7 @@ const HardCoded = require('./providers/hardcoded');
 const DsicollectionDynamicEnvironment = require('./providers/dsicollectionDynamicEnvironment');
 const environmentService = require('./service/environmentService');
 const snsClient = require('./service/snsClient');
+const unflatten = require('flat').unflatten;
 
 class Deployer {
 	public file: any;
@@ -133,12 +134,12 @@ class Deployer {
             name: process.env.COMPONENT_NAME,
             provider: provider,
             inputs: (process.env.COMPONENT_INPUTS) 
-                ? JSON.parse(process.env.COMPONENT_INPUTS).reduce((obj: any, item: any) => {
+                ? unflatten(JSON.parse(process.env.COMPONENT_INPUTS).reduce((obj: any, item: any) => {
                     return {
                         ...obj,
                         [item.Key]: item.Value
                     }
-                }, {}) 
+                }, {}))
                 : undefined
         }
     }
