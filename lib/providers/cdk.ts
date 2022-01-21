@@ -39,6 +39,49 @@ export class CDK {
     }
 
     async deploy() {
+        let accountId: string;
+        let awsCredentials;
+        if(this.awsAccount) {
+            accountId = this.awsAccount.accountId;
+            awsCredentials = this.awsAccount.credentials;
+        } else {
+            accountId = this.config.account;
+        }
+        console.log('accountId', accountId);
+        console.log('credentials', awsCredentials)
+        const sdkProvider = await this.getSdkProvider(awsCredentials);
+        console.log('sdkProvider', sdkProvider);
+
+        const stack = await this.getStack(sdkProvider, accountId);
+
+        const cloudformation = new CloudFormationDeployments({sdkProvider: sdkProvider});
+        
+        let result: DeployStackResult;
+        try {
+             result = await cloudformation.deployStack({
+                stack,
+                deployName: stack.stackName,
+                force: true
+            });
+        } catch(err) {
+            return {
+                result: false,
+                exception: err,
+                outputs: []
+            }
+        }
+        
+        if(result.noOp) {
+            console.log(`Successfully deployed ${result.stackArtifact.stackName}!`)
+        }
+    
+        return {
+            result: true,
+            outputs: Object.entries(result.outputs)?.map(output => {return {Key: output[0], Value: output[1]}})
+        }
+    }
+
+    async getStack(sdkProvider: SdkProvider, accountId: string){
         console.log('awsAccount', this.awsAccount);
         let construct: any;
         const { createRequireFromPath } = require('module')
@@ -71,8 +114,6 @@ export class CDK {
         const configuration = new Configuration();
         await configuration.load();
 
-        increaseVerbosity();
-
         function refreshApp(account: string, region: string): cdk.App {
             const app = new cdk.App({context: { 
                 ...configuration.context.all
@@ -89,21 +130,8 @@ export class CDK {
             return app;
         }
 
-        let accountId: string;
-        let awsCredentials;
-        if(this.awsAccount) {
-            accountId = this.awsAccount.accountId;
-            awsCredentials = this.awsAccount.credentials;
-        } else {
-            accountId = this.config.account;
-        }
-        console.log('accountId', accountId);
-        console.log('credentials', awsCredentials)
-
         let app = refreshApp(accountId, this.config.region);
-        const sdkProvider = await this.getSdkProvider(awsCredentials);
-        console.log('sdkProvider', sdkProvider);
-
+        
         const cloudExecutable = new CloudExecutable({
             configuration,
             sdkProvider,
@@ -117,13 +145,32 @@ export class CDK {
 
         const assembly = await cloudExecutable.synthesize();
 
-        const cloudformation = new CloudFormationDeployments({sdkProvider: sdkProvider});
-
         const stack = assembly.assembly.stacks[0];
+
+        return stack;
+
+    }
+
+    async remove() {
+        let accountId: string;
+        let awsCredentials;
+        if(this.awsAccount) {
+            accountId = this.awsAccount.accountId;
+            awsCredentials = this.awsAccount.credentials;
+        } else {
+            accountId = this.config.account;
+        }
+        console.log('accountId', accountId);
+        console.log('credentials', awsCredentials)
+        const sdkProvider = await this.getSdkProvider(awsCredentials);
+        console.log('sdkProvider', sdkProvider);
+
+        const stack = await this.getStack(sdkProvider, accountId);
+
+        const cloudformation = new CloudFormationDeployments({sdkProvider: sdkProvider});
         
-        let result: DeployStackResult;
         try {
-             result = await cloudformation.deployStack({
+             await cloudformation.destroyStack({
                 stack,
                 deployName: stack.stackName,
                 force: true
@@ -135,15 +182,12 @@ export class CDK {
                 outputs: []
             }
         }
-        
-        if(result.noOp) {
-            console.log(`Successfully deployed ${result.stackArtifact.stackName}!`)
-        }
     
         return {
             result: true,
-            outputs: Object.entries(result.outputs)?.map(output => {return {Key: output[0], Value: output[1]}})
+            outputs: []
         }
+
     }
 
     async getSdkProvider(paramaterName?: string): Promise<SdkProvider> {
