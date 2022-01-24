@@ -137,12 +137,17 @@ export class CDK {
         }
         
         if(result.noOp) {
-            console.log(`Successfully deployed ${result.stackArtifact.stackName}!`)
+            try {
+                console.log(JSON.stringify(result, null, 2));
+                console.log(`Successfully deployed ${result.stackArtifact.stackName}!`)
+            } catch (err) {
+                console.error(err);
+            }
         }
     
         return {
             result: true,
-            outputs: Object.entries(result.outputs)?.map(output => {return {Key: output[0], Value: output[1]}})
+            outputs: result.outputs ? Object.entries(result.outputs)?.map(output => {return {Key: output[0], Value: output[1]}}) : []
         }
     }
 
