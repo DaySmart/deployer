@@ -85,15 +85,15 @@ export class Serverless {
                 strToBool: require(path.resolve(serverlessPath, '../configuration/variables/sources/str-to-bool')),
             };
             const variablesMeta = resolveVariablesMeta(configuration);
+            let serviceDir = process.cwd();
             await resolveVariables({
                 servicePath: process.cwd(),
+                serviceDir: serviceDir,
                 configuration,
                 variablesMeta,
                 sources: variableSources,
                 options,
             });
-
-            let serviceDir = process.cwd();
 
             sls = new serverless({
                 configuration,
