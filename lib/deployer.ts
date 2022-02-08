@@ -92,7 +92,13 @@ class Deployer {
             var status = 'Failed';
             var outputs = []
             if(result) {
-                status = result.result ? 'Success' : 'Failed'
+                if (result.result) {
+                    if (this.command === 'remove') {
+                        status = 'Deleted';
+                    } else {
+                        status = 'Success';
+                    }
+                }
                 outputs = result.outputs || [];
             }
             await snsClient.publishJobRunFinishedMessage({
