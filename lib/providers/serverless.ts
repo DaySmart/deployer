@@ -47,8 +47,12 @@ export class Serverless {
 
             if(param.Parameter && param.Parameter.Value) {
                 const credentials = JSON.parse(param.Parameter.Value);
+                let stageArg = ""
+                if(serverlessVersion[0] === "2" || serverlessVersion[0] === "1") {
+                    stageArg = `--stage ${this.stage} `;
+                }
                 try {
-                    const { stdout, stderr } = await exec(`npx serverless config credentials --provider aws --stage ${this.stage} --profile frank --key ${credentials.AWS_ACCESS_KEY_ID} --secret ${credentials.AWS_SECRET_ACCESS_KEY}`)
+                    const { stdout, stderr } = await exec(`npx serverless config credentials --provider aws -o --profile frank ${stageArg}--key ${credentials.AWS_ACCESS_KEY_ID} --secret ${credentials.AWS_SECRET_ACCESS_KEY}`)
                     console.log('stdout', stdout);
                     console.log('stderr', stderr);
                 } catch(err) {
@@ -71,7 +75,6 @@ export class Serverless {
             }
 
             const configPath = path.join(process.cwd(), 'serverless.yml');
-
             const readConfiguration = require(path.resolve(serverlessPath, '../configuration/read'));
             const configuration = await readConfiguration(configPath);
 
@@ -100,11 +103,36 @@ export class Serverless {
                 configurationPath: configPath,
                 serviceDir,
                 configurationFileName: configuration && configPath.slice(serviceDir.length + 1),
-                isConfigurationResolved: true,
+                isConfigurationResolved: false,
                 hasResolvedCommandsExternally: true,
                 isTelemetryReportedExternally: false,
                 commands,
                 options,
+            });
+        } else if(serverlessVersion[0] === "3") {
+            const commands = ['deploy'];
+            let options = Object.create(null);
+            options['verbose'] = true;
+            options['region'] = this.region;
+            options['stage'] = this.stage;
+
+            if(this.account) {
+                options['aws-profile'] = 'frank'
+            }
+
+            const configPath = path.join(process.cwd(), 'serverless.yml');
+
+            const readConfiguration = require(path.join(serverlessPath, '../configuration/read'));
+            let configuration = await readConfiguration(configPath);
+
+            const serviceDir = process.cwd();
+            sls = new serverless({
+                configuration,
+                serviceDir,
+                configurationFilename: 'serverless.yml',
+                isConfigurationResolved: false,
+                commands,
+                options
             });
         } else {
             process.argv.push('deploy');
