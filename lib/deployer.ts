@@ -117,6 +117,7 @@ class Deployer {
     }
 
     parseEnvironmentVariables(): any {
+        console.log('env', process.env);
         let provider
         try {
             const rawProvider = JSON.parse(process.env.COMPONENT_PROVIDER as string)
