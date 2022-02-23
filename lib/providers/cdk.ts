@@ -90,7 +90,7 @@ export class CDK {
                 }
             });
             console.log('refresh stack node meta', s.node.metadata);
-            app.synth({force: true});
+            // app.synth({force: true});
             console.log('refresh app synth', app);
             return app;
         }
