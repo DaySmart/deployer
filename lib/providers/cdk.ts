@@ -89,7 +89,7 @@ export class CDK {
                     region: region
                 }
             });
-            console.log('refresh stack node', s.node);
+            console.log('refresh stack node meta', s.node.metadata);
             app.synth({force: true});
             console.log('refresh app synth', app);
             return app;
