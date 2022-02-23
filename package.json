@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/DaySmart/deployer#readme",
   "dependencies": {
-    "@aws-cdk/core": "^1.94.1",
+    "@aws-cdk/core": "1.94.1",
     "aws-cdk": "1.94.1",
     "aws-sdk": "^2.869.0",
     "flat": "^5.0.2",
