@@ -108,14 +108,19 @@ export class CDK {
             configuration,
             sdkProvider,
             synthesizer: async (aws: SdkProvider, config: Configuration): Promise<cxapi.CloudAssembly> => {
+                console.log('synth called');
                 await config.load();
+                console.log('config', config);
                 app = refreshApp(accountId, this.config.region);
+                console.log('app', app);
                 let stackAssembly = app.synth({force: true});
+                console.log('stackAssembly', stackAssembly);
                 return new cxapi.CloudAssembly(stackAssembly.directory);
             }
         });
 
         const assembly = await cloudExecutable.synthesize();
+        console.log('assembly', assembly);
 
         const cloudformation = new CloudFormationDeployments({sdkProvider: sdkProvider});
 
