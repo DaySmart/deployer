@@ -76,9 +76,11 @@ export class CDK {
         function refreshApp(account: string, region: string): cdk.App {
             console.log('refresh app');
             const app = new cdk.App({context: { 
-                ...configuration.context.all
+                ...configuration.context.all,
+            
             },
-            outdir: 'cdk.frankenstack.out'
+            outdir: 'cdk.frankenstack.out',
+            analyticsReporting: false
             });
             console.log('refresh app', app);
             const s = new CdkStack(app, `${env}-${componentName}`, {
