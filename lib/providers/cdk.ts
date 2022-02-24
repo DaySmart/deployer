@@ -9,7 +9,8 @@ import { DeployStackResult } from 'aws-cdk/lib/api/deploy-stack';
 import * as cxapi from '@aws-cdk/cx-api/lib/cloud-assembly';
 import { increaseVerbosity } from 'aws-cdk/lib/logging';
 import { } from 'aws-cdk/lib/cdk-toolkit';
-import { Credentials, CredentialProviderChain, SSM } from 'aws-sdk';
+import { Credentials, CredentialProviderChain, SSM, ChainableTemporaryCredentials } from 'aws-sdk';
+import { Stage } from '@aws-cdk/core';
 
 export interface CDKProviderProps {
     account: any;
@@ -120,6 +121,16 @@ export class CDK {
                 console.log('config', config);
                 app = refreshApp(accountId, this.config.region);
                 console.log(app.node.children);
+                for(let child of app.node.children) {
+                    console.log('child', child);
+                    if(Stage.isStage(child)) {
+                        try {
+                            (child as Stage).synth();
+                        } catch(err) {
+                            console.error(err);
+                        }
+                    }
+                }
                 let stackAssembly = app.synth({force: true});
                 console.log('stackAssembly', stackAssembly);
                 return new cxapi.CloudAssembly(stackAssembly.directory);
