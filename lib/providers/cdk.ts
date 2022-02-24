@@ -162,7 +162,7 @@ export class CDK {
         if(result.noOp) {
             try {
                 console.log(JSON.stringify(result, null, 2));
-                console.log(`Successfully deployed ${result.stackArtifact.stackName}!`)
+                console.log(`Successfully deployed ${result.stackArn}`)
             } catch (err) {
                 console.error(err);
             }
