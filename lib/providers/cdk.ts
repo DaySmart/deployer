@@ -8,6 +8,7 @@ import { CloudExecutable } from 'aws-cdk/lib/api/cxapp/cloud-executable';
 import { DeployStackResult } from 'aws-cdk/lib/api/deploy-stack';
 import * as cxapi from '@aws-cdk/cx-api/lib/cloud-assembly';
 import { increaseVerbosity } from 'aws-cdk/lib/logging';
+import { } from 'aws-cdk/lib/cdk-toolkit';
 import { Credentials, CredentialProviderChain, SSM } from 'aws-sdk';
 
 export interface CDKProviderProps {
@@ -118,7 +119,7 @@ export class CDK {
                 await config.load();
                 console.log('config', config);
                 app = refreshApp(accountId, this.config.region);
-                console.log('app', app);
+                console.log(app.node.children);
                 let stackAssembly = app.synth({force: true});
                 console.log('stackAssembly', stackAssembly);
                 return new cxapi.CloudAssembly(stackAssembly.directory);
