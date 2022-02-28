@@ -168,9 +168,9 @@ export class CDK {
         const stack = await this.getStack(sdkProvider, accountId);
 
         const cloudformation = new CloudFormationDeployments({sdkProvider: sdkProvider});
-        
+
         try {
-             await cloudformation.destroyStack({
+            await cloudformation.destroyStack({
                 stack,
                 deployName: stack.stackName,
                 force: true

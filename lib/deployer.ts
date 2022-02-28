@@ -6,6 +6,7 @@ const DsicollectionDynamicEnvironment = require('./providers/dsicollectionDynami
 const environmentService = require('./service/environmentService');
 const snsClient = require('./service/snsClient');
 const unflatten = require('flat').unflatten;
+const AWS = require('aws-sdk');
 
 class Deployer {
 	public file: any;
@@ -29,6 +30,11 @@ class Deployer {
     }
 
     async run() {
+        try {
+            await this.resolveSecrets()
+        } catch(err) {
+            console.error('Error on resolving secrets', err);
+        }  
         if(this.command === 'deploy') {
             await this.deploy();
         } else if(this.command === 'remove') {
@@ -190,6 +196,30 @@ class Deployer {
 
     parseComponentTemplate(file: string) {
         return parseYaml(file);
+    }
+
+    async resolveSecrets(): Promise<void> {
+        const ssm = new AWS.SSM();
+        if(!this.component.inputs) {
+            return;
+        }
+        for(var key of Object.keys(this.component.inputs)) {
+            if(this.component.inputs[key].startsWith('ssm:')) {
+                console.log(`Resolving secret value for: ${this.component.inputs[key]}`)
+                const paramName = this.component.inputs[key].replace('ssm:', '');
+                const param = await ssm.getParameter({
+                    Name: paramName,
+                    WithDecryption: true
+                }).promise();
+                if(param.Parameter && param.Parameter.Value) {
+                    this.component.inputs[key] = param.Parameter.Value; 
+                } else {
+                    const result = {status: false}
+                    await this.publishResultToFrankenstack(result);
+                    throw `Failed to resolve secret value for paramater: ${paramName}`;
+                }
+            }
+        }
     }
 }
 
