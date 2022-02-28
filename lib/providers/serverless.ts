@@ -45,7 +45,7 @@ export class Serverless {
     async getStackOutput(serverless: any) {
         const stackName = serverless.providers.aws.naming.getStackName();
         let stackOutputs;
-        if(serverless.getVersion()[0] === '2') {
+        if(serverless.getVersion()[0] === '2' || serverless.getVersion()[0] === '3') {
             console.log("outputting v2");
             const result = await serverless.providers.aws
                 .request('CloudFormation', 'describeStacks', { StackName: stackName })
