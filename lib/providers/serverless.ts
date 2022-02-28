@@ -200,7 +200,13 @@ export class Serverless {
             console.error(err);
             success = false
         }
-        const outputs = await this.getStackOutput(sls);
+        let outputs;
+
+        if (command === 'remove'){
+            outputs = [];
+        } else {
+            outputs = await this.getStackOutput(sls);
+        }
 
         return {
             result: success,
