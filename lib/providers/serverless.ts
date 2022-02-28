@@ -26,6 +26,46 @@ export class Serverless {
     }
 
     async deploy() {
+        return await this.executeServerless('deploy');
+    }
+
+    writeConfigFile() {
+        if(this.input) {
+            let output = yaml.dump(this.input);
+
+            let deployerDir = path.join(process.cwd(), '.deployer')
+            if(!fs.existsSync(deployerDir)) {
+                fs.mkdirSync(deployerDir);
+            }
+
+            fs.writeFileSync(path.join(process.cwd(), '.deployer', 'serverless.config.yaml'), output, 'utf-8');
+        }
+    }
+
+    async getStackOutput(serverless: any) {
+        const stackName = serverless.providers.aws.naming.getStackName();
+        let stackOutputs;
+        if(serverless.getVersion()[0] === '2') {
+            console.log("outputting v2");
+            const result = await serverless.providers.aws
+                .request('CloudFormation', 'describeStacks', { StackName: stackName })
+            stackOutputs = result.Stacks[0].Outputs;
+
+        } else {
+            stackOutputs = serverless.providers.aws
+                .request('CloudFormation', 'describeStacks', { StackName: stackName })
+                .then((result: any) => {
+                    return result.Stacks[0].Outputs
+                });
+        }
+        return stackOutputs.map((output: any) => {return {Key: output.OutputKey, Value: output.OutputValue}});
+    }
+
+    async remove() {
+        return await this.executeServerless('remove');
+    }
+
+    async executeServerless(command: string) {
         this.writeConfigFile();
 
         const serverlessPath = resolve(process.cwd(), 'serverless').realPath;
@@ -60,7 +100,7 @@ export class Serverless {
         }
 
         if(serverlessVersion[0] === "2") {
-            const commands = ['deploy'];
+            const commands = [command];
             let options = Object.create(null);
             options['verbose'] = true;
             options['region'] = this.region;
@@ -107,7 +147,7 @@ export class Serverless {
                 options,
             });
         } else {
-            process.argv.push('deploy');
+            process.argv.push(command);
             process.argv.push('-v');
 
             if(this.region) {
@@ -138,37 +178,6 @@ export class Serverless {
             result: success,
             outputs: outputs
         }
-    }
 
-    writeConfigFile() {
-        if(this.input) {
-            let output = yaml.dump(this.input);
-
-            let deployerDir = path.join(process.cwd(), '.deployer')
-            if(!fs.existsSync(deployerDir)) {
-                fs.mkdirSync(deployerDir);
-            }
-
-            fs.writeFileSync(path.join(process.cwd(), '.deployer', 'serverless.config.yaml'), output, 'utf-8');
-        }
-    }
-
-    async getStackOutput(serverless: any) {
-        const stackName = serverless.providers.aws.naming.getStackName();
-        let stackOutputs;
-        if(serverless.getVersion()[0] === '2') {
-            console.log("outputting v2");
-            const result = await serverless.providers.aws
-                .request('CloudFormation', 'describeStacks', { StackName: stackName })
-            stackOutputs = result.Stacks[0].Outputs;
-
-        } else {
-            stackOutputs = serverless.providers.aws
-                .request('CloudFormation', 'describeStacks', { StackName: stackName })
-                .then((result: any) => {
-                    return result.Stacks[0].Outputs
-                });
-        }
-        return stackOutputs.map((output: any) => {return {Key: output.OutputKey, Value: output.OutputValue}});
     }
 }
