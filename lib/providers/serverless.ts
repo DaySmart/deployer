@@ -150,7 +150,7 @@ export class Serverless {
                 options,
             });
         } else if(serverlessVersion[0] === "3") {
-            const commands = ['deploy'];
+            const commands = [command];
             let options = Object.create(null);
             options['verbose'] = true;
             options['region'] = this.region;
