@@ -97,6 +97,7 @@ class Deployer {
                         provider = new providerPackage(providerConfig);
                         this.publish = false;
                     } catch(err) {
+                        console.error(err);
                         throw(`The provider ${providerType} is not implemented!`);
                     }
             }
