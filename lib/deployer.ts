@@ -14,6 +14,7 @@ class Deployer {
     public component: any;
     public jobRunGuid?: string;
     public deploymentGuid?: string;
+    private publish: boolean = true;
 
     constructor(command: any, file: string | undefined) {
         this.file = file;
@@ -72,14 +73,41 @@ class Deployer {
                     provider = new CDK(this.component.name, this.component.env, this.component.provider.config, this.component.inputs, this.component.provider.account);
                     break;
                 default:
-                    throw(`The provider ${providerType} is not implemented!`);
+                    try {
+                        const { createRequireFromPath } = require('module');
+                        const requireUtil = createRequireFromPath(process.cwd() + '/node_modules');
+                        const providerPackage = requireUtil(providerType);
+                        const providerConfig = {
+                            componentProvider: {
+                                name: this.component.provider.name,
+                                config: Object.entries(this.component.provider.config).map(config => {
+                                    return {key: config[0], value: config[1]}
+                                }),
+                                account: this.component.provider.account
+                            },
+                            environment: this.component.env,
+                            componentName: this.component.name,
+                            deploymentGuid: this.deploymentGuid,
+                            jobRunGuid: this.jobRunGuid,
+                            jobRunFinishedTopicArn: process.env.JOB_RUN_FINISHED_TOPIC_ARN,
+                            inputs: Object.entries(this.component.inputs).map(input => {
+                                return {key: input[0], value: input[1]}
+                            })
+                        }
+                        provider = new providerPackage(providerConfig);
+                        this.publish = false;
+                    } catch(err) {
+                        throw(`The provider ${providerType} is not implemented!`);
+                    }
             }
 
             deployResp = await provider.deploy();
         } catch(err) {
             throw err;
         } finally {
-            await this.publishResultToFrankenstack(deployResp);
+            if(this.publish) {
+                await this.publishResultToFrankenstack(deployResp);
+            }
             if(deployResp.exception) {
                 throw deployResp.exception;
             }
