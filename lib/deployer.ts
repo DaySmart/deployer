@@ -94,7 +94,8 @@ class Deployer {
                                 return {key: input[0], value: input[1]}
                             })
                         }
-                        provider = new providerPackage(providerConfig);
+                        const providerClass = Object.keys(providerPackage)[0];
+                        provider = new providerPackage[providerClass](providerConfig);
                         this.publish = false;
                     } catch(err) {
                         console.error(err);
