@@ -110,7 +110,7 @@ class Deployer {
             if(this.publish) {
                 await this.publishResultToFrankenstack(deployResp);
             }
-            if(deployResp.exception) {
+            if(deployResp && deployResp.exception) {
                 throw deployResp.exception;
             }
         }
