@@ -109,6 +109,8 @@ class Deployer {
         } finally {
             if(this.publish) {
                 await this.publishResultToFrankenstack(deployResp);
+            } else {
+                await provider.sendResponse();
             }
             if(deployResp && deployResp.exception) {
                 throw deployResp.exception;
