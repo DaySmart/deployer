@@ -164,12 +164,13 @@ export class Serverless {
 
             const readConfiguration = require(path.join(serverlessPath, '../configuration/read'));
             let configuration = await readConfiguration(configPath);
-
             const serviceDir = process.cwd();
             try {
+                console.log('before', configuration);
                 const resolveVariablesMeta = require(path.resolve(serverlessPath, '../configuration/variables/resolve-meta'));
 
                 const variablesMeta = resolveVariablesMeta(configuration);
+                console.log('varmeta', variablesMeta);
                 const filterSupportedOptions = require(path.resolve(serverlessPath, '../cli/filter-supported-options'));
                 const resolveProviderName = require(path.resolve(serverlessPath, '../configuration/resolve-provider-name'));
                 const providerName = resolveProviderName(configuration);
@@ -179,20 +180,21 @@ export class Serverless {
                     configuration,
                     variablesMeta,
                     sources: {
-                    env: require(path.resolve(serverlessPath, '../configuration/variables/sources/env')),
-                    file: require(path.resolve(serverlessPath, '../configuration/variables/sources/file')),
-                    opt: require(path.resolve(serverlessPath, '../configuration/variables/sources/opt')),
-                    self: require(path.resolve(serverlessPath, '../configuration/variables/sources/self')),
-                    strToBool: require(path.resolve(serverlessPath, '../configuration/variables/sources/str-to-bool')),
-                    sls: require(path.resolve(serverlessPath, '../configuration/variables/sources/instance-dependent/get-sls'))(),
+                        env: require(path.resolve(serverlessPath, '../configuration/variables/sources/env')),
+                        file: require(path.resolve(serverlessPath, '../configuration/variables/sources/file')),
+                        opt: require(path.resolve(serverlessPath, '../configuration/variables/sources/opt')),
+                        self: require(path.resolve(serverlessPath, '../configuration/variables/sources/self')),
+                        strToBool: require(path.resolve(serverlessPath, '../configuration/variables/sources/str-to-bool')),
+                        sls: require(path.resolve(serverlessPath, '../configuration/variables/sources/instance-dependent/get-sls'))(),
                     },
-                    options: filterSupportedOptions(options, { undefined, providerName }),
-                    fulfilledSources: new Set(['file', 'self', 'strToBool']),
-                    propertyPathsToResolve: new Set(['provider\0name', 'provider\0stage', 'useDotenv']),
-                    variableSourcesInConfig,
+                    options: filterSupportedOptions(options),
+                    // fulfilledSources: new Set(['file', 'self', 'strToBool']),
+                    // propertyPathsToResolve: new Set(['provider\0name', 'provider\0stage', 'useDotenv']),
+                    // variableSourcesInConfig,
                 };
                 const resolveVariables = require(path.resolve(serverlessPath, '../configuration/variables/resolve'));
                 await resolveVariables(resolverConfiguration);
+                console.log('after', configuration);
             } catch(err) {
                 console.error(err);
             }
