@@ -200,7 +200,7 @@ export class Serverless {
                 };
                 const resolveVariables = require(path.resolve(serverlessPath, '../configuration/variables/resolve'));
                 let count = 0;
-                while(variablesMeta.size > 0 && count > 10) {
+                while(variablesMeta.size > 0 && count < 10) {
                     console.log('resolve vars', count, variablesMeta.size);
                     await resolveVariables(resolverConfiguration);
                     count++;
