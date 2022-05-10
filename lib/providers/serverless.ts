@@ -192,7 +192,7 @@ export class Serverless {
                         strToBool: require(path.resolve(serverlessPath, '../configuration/variables/sources/str-to-bool')),
                         sls: require(path.resolve(serverlessPath, '../configuration/variables/sources/instance-dependent/get-sls'))(),
                     },
-                    options: filterSupportedOptions(options, { undefined, providerName }),
+                    options: filterSupportedOptions(options, { commandSchema, providerName }),
                     fulfilledSources: new Set(['file', 'self', 'strToBool']),
                     propertyPathsToResolve: new Set(['provider\0name', 'provider\0stage', 'useDotenv']),
                     variableSourcesInConfig,
