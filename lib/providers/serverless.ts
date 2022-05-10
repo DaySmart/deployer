@@ -209,6 +209,7 @@ export class Serverless {
                       });
                     count++;
                 }
+                console.log('after varmeta', variablesMeta);
                 
                 console.log('after', configuration);
             } catch(err) {
