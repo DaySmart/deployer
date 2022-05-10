@@ -193,7 +193,8 @@ export class Serverless {
                         sls: require(path.resolve(serverlessPath, '../configuration/variables/sources/instance-dependent/get-sls'))(),
                     },
                     options: filterSupportedOptions(options, { commandSchema, providerName }),
-                    fulfilledSources: new Set(['file', 'self', 'strToBool']),
+                    // fulfilledSources: new Set(['file', 'self', 'strToBool']),
+                    fulfilledSources: new Set([])
                     // propertyPathsToResolve: new Set(['provider\0name', 'provider\0stage', 'useDotenv']),
                     // variableSourcesInConfig,
                 };
