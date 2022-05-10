@@ -179,7 +179,6 @@ export class Serverless {
                 ({ c, commands, opt, isHelpRequest, commandSchema } = resolveInput(
                     require(path.resolve(serverlessPath, '../cli/commands-schema/aws-service'))
                   ));
-                const variableSourcesInConfig = new Set();
                 const resolverConfiguration = {
                     serviceDir,
                     configuration,
@@ -193,36 +192,41 @@ export class Serverless {
                         sls: require(path.resolve(serverlessPath, '../configuration/variables/sources/instance-dependent/get-sls'))(),
                     },
                     options: filterSupportedOptions(options, { commandSchema, providerName }),
-                    // fulfilledSources: new Set(['file', 'self', 'strToBool']),
                     fulfilledSources: new Set([])
-                    // propertyPathsToResolve: new Set(['provider\0name', 'provider\0stage', 'useDotenv']),
-                    // variableSourcesInConfig,
                 };
                 const resolveVariables = require(path.resolve(serverlessPath, '../configuration/variables/resolve'));
-                let count = 0;
-                while(variablesMeta.size > 0 && count < 10) {
-                    console.log('resolve vars', count, variablesMeta.size);
-                    await resolveVariables(resolverConfiguration);
-                    await resolveVariables({
-                        ...resolverConfiguration,
-                        propertyPathsToResolve: new Set(['provider\0stage', 'useDotenv']),
-                      });
-                    count++;
-                }
-                console.log('after varmeta', variablesMeta);
+                await resolveVariables(resolverConfiguration);
+
+                sls = new serverless({
+                    configuration,
+                    serviceDir,
+                    configurationFilename: 'serverless.yml',
+                    isConfigurationResolved: false,
+                    commands,
+                    options
+                });
                 
-                console.log('after', configuration);
+                resolverConfiguration.sources.sls = require(path.resolve(serverlessPath, '../configuration/variables/sources/instance-dependent/get-sls'))(sls);
+
+                Object.assign(resolverConfiguration.sources, {
+                    cf: require(path.resolve(serverlessPath, '../configuration/variables/sources/instance-dependent/get-cf'))(
+                      sls
+                    ),
+                    s3: require(path.resolve(serverlessPath, '../configuration/variables/sources/instance-dependent/get-s3'))(
+                      sls
+                    ),
+                    ssm: require(path.resolve(serverlessPath, '../configuration/variables/sources/instance-dependent/get-ssm'))(
+                      sls
+                    ),
+                    aws: require(path.resolve(serverlessPath, '../configuration/variables/sources/instance-dependent/get-aws'))(
+                      sls
+                    ),
+                });
+                await resolveVariables(resolverConfiguration);
             } catch(err) {
                 console.error(err);
             }
-            sls = new serverless({
-                configuration,
-                serviceDir,
-                configurationFilename: 'serverless.yml',
-                isConfigurationResolved: false,
-                commands,
-                options
-            });
+
         } else {
             process.argv.push(command);
             process.argv.push('-v');
