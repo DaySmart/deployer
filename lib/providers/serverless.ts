@@ -166,6 +166,36 @@ export class Serverless {
             let configuration = await readConfiguration(configPath);
 
             const serviceDir = process.cwd();
+            try {
+                const resolveVariablesMeta = require(path.resolve(serverlessPath, '../lib/configuration/variables/resolve-meta'));
+
+                const variablesMeta = resolveVariablesMeta(configuration);
+                const filterSupportedOptions = require(path.resolve(serverlessPath, '../lib/cli/filter-supported-options'));
+                const resolveProviderName = require(path.resolve(serverlessPath, '../lib/configuration/resolve-provider-name'));
+                const providerName = resolveProviderName(configuration);
+                const variableSourcesInConfig = new Set();
+                const resolverConfiguration = {
+                    serviceDir,
+                    configuration,
+                    variablesMeta,
+                    sources: {
+                    env: require(path.resolve(serverlessPath, '../lib/configuration/variables/sources/env')),
+                    file: require(path.resolve(serverlessPath, '../lib/configuration/variables/sources/file')),
+                    opt: require(path.resolve(serverlessPath, '../lib/configuration/variables/sources/opt')),
+                    self: require(path.resolve(serverlessPath, '../lib/configuration/variables/sources/self')),
+                    strToBool: require(path.resolve(serverlessPath, '../lib/configuration/variables/sources/str-to-bool')),
+                    sls: require(path.resolve(serverlessPath, '../lib/configuration/variables/sources/instance-dependent/get-sls'))(),
+                    },
+                    options: filterSupportedOptions(options, { undefined, providerName }),
+                    fulfilledSources: new Set(['file', 'self', 'strToBool']),
+                    propertyPathsToResolve: new Set(['provider\0name', 'provider\0stage', 'useDotenv']),
+                    variableSourcesInConfig,
+                };
+                const resolveVariables = require(path.resolve(serverlessPath, '../lib/configuration/variables/resolve'));
+                await resolveVariables(resolverConfiguration);
+            } catch(err) {
+                console.error(err);
+            }
             sls = new serverless({
                 configuration,
                 serviceDir,
