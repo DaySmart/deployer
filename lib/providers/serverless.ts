@@ -194,8 +194,8 @@ export class Serverless {
                     },
                     options: filterSupportedOptions(options, { commandSchema, providerName }),
                     fulfilledSources: new Set(['file', 'self', 'strToBool']),
-                    propertyPathsToResolve: new Set(['provider\0name', 'provider\0stage', 'useDotenv']),
-                    variableSourcesInConfig,
+                    // propertyPathsToResolve: new Set(['provider\0name', 'provider\0stage', 'useDotenv']),
+                    // variableSourcesInConfig,
                 };
                 const resolveVariables = require(path.resolve(serverlessPath, '../configuration/variables/resolve'));
                 await resolveVariables(resolverConfiguration);
