@@ -199,7 +199,13 @@ export class Serverless {
                     // variableSourcesInConfig,
                 };
                 const resolveVariables = require(path.resolve(serverlessPath, '../configuration/variables/resolve'));
-                await resolveVariables(resolverConfiguration);
+                let count = 0;
+                while(variablesMeta.size > 0 || count > 10) {
+                    console.log('resolve vars', count, variablesMeta.size);
+                    await resolveVariables(resolverConfiguration);
+                    count++;
+                }
+                
                 console.log('after', configuration);
             } catch(err) {
                 console.error(err);
