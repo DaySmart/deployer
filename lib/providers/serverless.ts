@@ -203,6 +203,10 @@ export class Serverless {
                 while(variablesMeta.size > 0 && count < 10) {
                     console.log('resolve vars', count, variablesMeta.size);
                     await resolveVariables(resolverConfiguration);
+                    await resolveVariables({
+                        ...resolverConfiguration,
+                        propertyPathsToResolve: new Set(['provider\0stage', 'useDotenv']),
+                      });
                     count++;
                 }
                 
