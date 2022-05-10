@@ -205,6 +205,8 @@ export class Serverless {
                     commands,
                     options
                 });
+
+                await sls.init();
                 
                 resolverConfiguration.sources.sls = require(path.resolve(serverlessPath, '../configuration/variables/sources/instance-dependent/get-sls'))(sls);
 
@@ -246,7 +248,9 @@ export class Serverless {
         }
 
         let success = true;
-        await sls.init();
+        if(serverlessVersion[0] !== "3") {
+            await sls.init();
+        }
         try {
             await sls.run();
         } catch(err) {
