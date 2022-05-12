@@ -195,7 +195,7 @@ export class Serverless {
                 };
                 const resolveVariables = require(path.resolve(serverlessPath, '../configuration/variables/resolve'));
                 await resolveVariables(resolverConfiguration);
-                console.log('resolved config', configuration);
+                
                 sls = new serverless({
                     configuration,
                     serviceDir,
@@ -207,23 +207,25 @@ export class Serverless {
 
                 await sls.init();
                 
-                // resolverConfiguration.sources.sls = require(path.resolve(serverlessPath, '../configuration/variables/sources/instance-dependent/get-sls'))(sls);
+                resolverConfiguration.sources.sls = require(path.resolve(serverlessPath, '../configuration/variables/sources/instance-dependent/get-sls'))(sls);
 
-                // Object.assign(resolverConfiguration.sources, {
-                //     cf: require(path.resolve(serverlessPath, '../configuration/variables/sources/instance-dependent/get-cf'))(
-                //       sls
-                //     ),
-                //     s3: require(path.resolve(serverlessPath, '../configuration/variables/sources/instance-dependent/get-s3'))(
-                //       sls
-                //     ),
-                //     ssm: require(path.resolve(serverlessPath, '../configuration/variables/sources/instance-dependent/get-ssm'))(
-                //       sls
-                //     ),
-                //     aws: require(path.resolve(serverlessPath, '../configuration/variables/sources/instance-dependent/get-aws'))(
-                //       sls
-                //     ),
-                // });
-                // await resolveVariables(resolverConfiguration);
+                Object.assign(resolverConfiguration.sources, {
+                    cf: require(path.resolve(serverlessPath, '../configuration/variables/sources/instance-dependent/get-cf'))(
+                      sls
+                    ),
+                    s3: require(path.resolve(serverlessPath, '../configuration/variables/sources/instance-dependent/get-s3'))(
+                      sls
+                    ),
+                    ssm: require(path.resolve(serverlessPath, '../configuration/variables/sources/instance-dependent/get-ssm'))(
+                      sls
+                    ),
+                    aws: require(path.resolve(serverlessPath, '../configuration/variables/sources/instance-dependent/get-aws'))(
+                      sls
+                    ),
+                });
+                await resolveVariables(resolverConfiguration);
+
+                console.log('resolved config', configuration);
             } catch(err) {
                 console.error('Error while resoving serverless template.', err);
             }
