@@ -225,7 +225,7 @@ export class Serverless {
                 });
                 await resolveVariables(resolverConfiguration);
 
-                console.log('resolved config', configuration, JSON.stringify(variablesMeta));
+                console.log('resolved config', configuration, util.inspect(variablesMeta, {showHidden: false, depth: null, colors: true}));
             } catch(err) {
                 console.error('Error while resoving serverless template.', err);
             }
