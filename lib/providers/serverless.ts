@@ -150,6 +150,7 @@ export class Serverless {
                 options,
             });
         } else if(serverlessVersion[0] === "3") {
+            console.log("Running provider for: Serverless framework v3");
             const commands = [command];
             let options = Object.create(null);
             options['verbose'] = true;
@@ -173,8 +174,8 @@ export class Serverless {
                 const resolveProviderName = require(path.resolve(serverlessPath, '../configuration/resolve-provider-name'));
                 const providerName = resolveProviderName(configuration);
                 const resolveInput = require(path.resolve(serverlessPath, '../cli/resolve-input'));
-                let c, opt, commands, isHelpRequest, commandSchema;
-                ({ c, commands, opt, isHelpRequest, commandSchema } = resolveInput(
+                let c, opt, cs, isHelpRequest, commandSchema;
+                ({ c, cs, opt, isHelpRequest, commandSchema } = resolveInput(
                     require(path.resolve(serverlessPath, '../cli/commands-schema/aws-service'))
                   ));
                 const resolverConfiguration = {
@@ -194,7 +195,7 @@ export class Serverless {
                 };
                 const resolveVariables = require(path.resolve(serverlessPath, '../configuration/variables/resolve'));
                 await resolveVariables(resolverConfiguration);
-
+                console.log('resolved config', configuration);
                 sls = new serverless({
                     configuration,
                     serviceDir,
@@ -224,7 +225,7 @@ export class Serverless {
                 // });
                 // await resolveVariables(resolverConfiguration);
             } catch(err) {
-                console.error(err);
+                console.error('Error while resoving serverless template.', err);
             }
 
         } else {
@@ -250,6 +251,7 @@ export class Serverless {
             await sls.init();
         }
         try {
+            console.log("Executing serverless run.")
             await sls.run();
         } catch(err) {
             console.error(err);
