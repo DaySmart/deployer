@@ -178,6 +178,7 @@ export class Serverless {
                 ({ c, cs, opt, isHelpRequest, commandSchema } = resolveInput(
                     require(path.resolve(serverlessPath, '../cli/commands-schema/aws-service'))
                   ));
+                let fulfilledSources: string[] = [];
                 const resolverConfiguration = {
                     serviceDir,
                     configuration,
@@ -191,9 +192,12 @@ export class Serverless {
                         sls: require(path.resolve(serverlessPath, '../configuration/variables/sources/instance-dependent/get-sls'))(),
                     },
                     options: filterSupportedOptions(options, { commandSchema, providerName }),
-                    fulfilledSources: new Set([])
+                    fulfilledSources: new Set(fulfilledSources)
                 };
                 const resolveVariables = require(path.resolve(serverlessPath, '../configuration/variables/resolve'));
+                await resolveVariables(resolverConfiguration);
+
+                resolverConfiguration.fulfilledSources.add('env');
                 await resolveVariables(resolverConfiguration);
                 
                 sls = new serverless({
