@@ -72,7 +72,7 @@ export class CDK {
         }
         
         if(result.noOp) {
-            console.log(`Successfully deployed ${result.stackArtifact.stackName}!`)
+            console.log(`Successfully deployed ${result.stackArn}!`)
         }
     
         return {
@@ -193,7 +193,9 @@ export class CDK {
     async getSdkProvider(paramaterName?: string): Promise<SdkProvider> {
         console.log('getSdkProvider parameterName', paramaterName);
         if(paramaterName) {
-            const ssm = new SSM();
+            const ssm = new SSM({
+                maxRetries: 10
+            });
             const param = await ssm.getParameter({
                 Name: paramaterName.replace('ssm:', ''),
                 WithDecryption: true
