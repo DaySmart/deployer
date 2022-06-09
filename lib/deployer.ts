@@ -1,5 +1,4 @@
 const parseYaml = require('./utils/parseYaml');
-import { CDK } from './providers/cdk';
 import { Serverless } from './providers/serverless';
 const HardCoded = require('./providers/hardcoded');
 const DsicollectionDynamicEnvironment = require('./providers/dsicollectionDynamicEnvironment');
@@ -70,7 +69,8 @@ class Deployer {
                     provider = new DsicollectionDynamicEnvironment(this.component);
                     break;
                 case 'cdk':
-                    provider = new CDK(this.component.name, this.component.env, this.component.provider.config, this.component.inputs, this.component.provider.account);
+                    const cdk = require('./providers/cdk');
+                    provider = new cdk.CDK(this.component.name, this.component.env, this.component.provider.config, this.component.inputs, this.component.provider.account);
                     break;
                 default:
                     try {
@@ -174,7 +174,8 @@ class Deployer {
                     provider = new DsicollectionDynamicEnvironment(this.component);
                     break;
                 case 'cdk':
-                    provider = new CDK(this.component.name, this.component.env, this.component.provider.config, this.component.inputs, this.component.provider.account);
+                    const cdk = require('./providers/cdk');
+                    provider = new cdk.CDK(this.component.name, this.component.env, this.component.provider.config, this.component.inputs, this.component.provider.account);
                     break;
                 default:
                     throw(`The provider ${providerType} is not implemented!`);
