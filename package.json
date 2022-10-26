@@ -29,7 +29,7 @@
     "got": "^11.7.0",
     "js-yaml": "^3.14.0",
     "json-refs": "^3.0.15",
-    "minimist": "^1.2.5",
+    "minimist": "^1.2.6",
     "serverless": "^1.83.0"
   },
   "devDependencies": {
