@@ -6,16 +6,17 @@ class HardCoded {
 
     constructor(config: any) {
         this.stage = config.env;
-        this.input = config.input;
+        this.input = config.inputs;
     }
 
     async deploy() {
         return {
+            result: true,
             outputs: Object.entries(this.input).map(([key, value]) => {
                 console.log(key, value);
                 return {
-                    key: key,
-                    value: value
+                    Key: key,
+                    Value: value
                 }
             })
         }
