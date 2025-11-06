@@ -58,6 +58,47 @@ The Deployer abstracts over multiple infrastructure/application deployment mecha
 - Simple YAML schema; minimal required fields.
 - Extensible provider model via a switch in `lib/deployer.ts`.
 
+## Requirements
+
+| Concern | Minimum | Recommended |
+|---------|---------|-------------|
+| Node.js runtime | 18.x LTS | 22.x (current active release) |
+| NPM | 8.x+ | 10.x+ |
+| AWS Credentials | Standard CLI / env vars | AssumeRole with MFA (org policy) |
+
+Why Node 22: Modern dependencies increasingly rely on stable `node:` specifiers, updated crypto APIs, and performance improvements only available in >=18; choosing 22 future‑proofs the tool and aligns with deprecation of older runtimes. Running under Node <16 can yield `Cannot find module 'node:crypto'` for packages expecting the newer resolution behavior.
+
+### CI / CodeBuild Note
+If you see errors like:
+```
+Error: Cannot find module 'node:crypto'
+```
+Update your buildspec to use a newer runtime (e.g. `runtime-versions: nodejs: 22`). Also correct any YAML typos (e.g. `upload-artificats` should be `upload-artifacts`). See example below.
+
+**Example buildspec.yml (Node 22)**
+```yaml
+version: 0.2
+env:
+  variables:
+    COMPONENT_FILE: components/orders.yaml
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - npm install -g git+https://github.com/DaySmart/deployer.git#master
+  pre_build:
+    commands:
+      - echo "Using Node $(node -v)" && deployer deploy $COMPONENT_FILE
+  build:
+    commands:
+      - echo "Build phase complete"  # (Optional – deployment already done in pre_build)
+artifacts:
+  files:
+    - '**/*'
+```
+Place `deploy` in `pre_build` if deployment is the goal; use `build` for subsequent packaging or tests.
+
 ## Component YAML Schema
 
 Below is a consolidated schema (informal). Fields may vary slightly per provider.
