@@ -25,7 +25,7 @@
   "dependencies": {
     "@aws-cdk/core": "^1.71.0",
     "aws-cdk": "^1.71.0",
-    "aws-sdk": "^2.770.0",
+    "aws-sdk": "^2.1354.0",
     "got": "^11.7.0",
     "js-yaml": "^3.14.0",
     "json-refs": "^3.0.15",
